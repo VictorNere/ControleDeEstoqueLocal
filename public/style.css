@@ -1,28 +1,16 @@
 :root {
-    --primary-color: #2c6e49; --primary-dark: #1e4d33; --secondary-color: #4c956c; --accent-color: #ffc9B5; --danger-color: #d90429; --bg-color: #fefee3; --card-bg: #ffffff; --text-color: #2d3a3a; --light-text-color: #6c757d; --border-color: #dee2e6; --shadow: 0 8px 24px rgba(0,0,0,0.1); --transition-speed: 0.3s;
+    --primary: #2c6e49; --bg: #fefee3; --card: #ffffff; --text: #2d3a3a;
 }
-*, *::before, *::after { box-sizing: border-box; }
-body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
 .container { width: 90%; max-width: 800px; text-align: center; }
-h1 { font-size: 3em; font-weight: 600; color: var(--primary-color); margin-bottom: 40px; }
-.main-menu { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-.menu-button { font-family: 'Poppins', sans-serif; background: var(--card-bg); color: var(--primary-color); border: 2px solid var(--primary-color); padding: 20px 40px; border-radius: 50px; cursor: pointer; font-size: 1.2em; font-weight: 600; transition: all var(--transition-speed) ease; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-.menu-button:hover { background-color: var(--primary-color); color: white; transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: all var(--transition-speed) ease; z-index: 1000; }
-.modal-overlay.active { opacity: 1; visibility: visible; }
-.modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); transform: scale(0.9); transition: transform var(--transition-speed) ease; }
-.modal-content.modal-lg { max-width: 900px; }
-.modal-overlay.active .modal-content { transform: scale(1); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; }
-.close-button { font-size: 1.5em; border: none; background: none; cursor: pointer; color: var(--light-text-color); }
-.form-group { text-align: left; margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--light-text-color); }
-input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1em; }
-.submit-btn { background: var(--primary-color); color: white; width: 100%; padding: 15px; border: none; border-radius: 6px; cursor: pointer; }
-.social-links { margin-top: 15px; display: flex; justify-content: center; gap: 20px; font-size: 1.5em; }
-.social-links a { color: var(--primary-color); transition: transform 0.3s; }
-.social-links a:hover { transform: scale(1.2); }
-.toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; }
-.toast { padding: 15px 20px; color: white; border-radius: 8px; margin-bottom: 10px; animation: slideIn 0.3s forwards; }
-.toast.success { background: var(--primary-color); }
-@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.main-menu { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+.menu-button { padding: 15px 25px; border: 2px solid var(--primary); background: var(--card); color: var(--primary); border-radius: 30px; cursor: pointer; font-weight: 600; }
+.menu-button:hover { background: var(--primary); color: white; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+.modal-overlay.active { display: flex; }
+.modal-content { background: white; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; }
+.form-group { margin-bottom: 15px; text-align: left; }
+input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+.submit-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; }
+.social-links { margin-top: 20px; display: flex; justify-content: center; gap: 15px; font-size: 1.5rem; }
+.social-links a { color: var(--primary); }
