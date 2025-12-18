@@ -11,7 +11,7 @@ h1 { font-size: 3em; color: var(--primary-color); margin-bottom: 40px; font-weig
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
 .modal-overlay.active { display: flex; }
 .modal-content { background: var(--card-bg); padding: 35px; border-radius: 15px; width: 95%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
-.modal-content.modal-lg { max-width: 1100px; }
+.modal-content.modal-lg { max-width: 1150px; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
 .modal-header h2 { margin: 0; color: var(--primary-dark); }
 .close-button { font-size: 2.5em; border: none; background: none; cursor: pointer; color: #ccc; transition: 0.2s; }
@@ -27,16 +27,14 @@ input:focus, select:focus, textarea:focus { background-color: #ffffff; border-co
 .submit-btn { padding: 15px 60px; background: var(--primary-color); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 1.1em; font-weight: 600; transition: 0.3s; }
 .submit-btn:hover { background: var(--primary-dark); transform: scale(1.02); }
 .submit-btn:disabled { background: #ccc; cursor: wait; }
-.filters-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px; }
-.filters-grid-rel { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.filters-grid { display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 15px; margin-bottom: 20px; }
+.filters-grid-rel { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 20px; }
 .table-responsive { overflow-x: auto; margin-top: 15px; border-radius: 10px; border: 1px solid #eee; }
 table { width: 100%; border-collapse: collapse; background: white; }
 th, td { padding: 15px; border-bottom: 1px solid #eee; text-align: left; }
 th { background: #fafafa; font-size: 0.85em; text-transform: uppercase; color: var(--light-text-color); }
 .item-link { color: var(--primary-color); cursor: pointer; font-weight: 600; text-decoration: underline; }
-.action-icon { cursor: pointer; margin-right: 15px; font-size: 1.2em; transition: 0.2s; }
-.withdraw-icon { color: #fca311; }
-.delete-icon { color: var(--danger-color); }
+.action-icon { cursor: pointer; margin-right: 12px; font-size: 1.2em; transition: 0.2s; }
 .report-actions { display: flex; gap: 15px; margin-bottom: 25px; }
 .report-actions.centralize { justify-content: center; }
 .action-btn { padding: 10px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 10px; background: var(--secondary-color); color: white; transition: 0.3s; }
@@ -46,7 +44,10 @@ th { background: #fafafa; font-size: 0.85em; text-transform: uppercase; color: v
 .toast.success { background: linear-gradient(135deg, #2c6e49, #4c956c); }
 .toast.error { background: linear-gradient(135deg, #d90429, #ef233c); }
 @keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
-@keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(130%); opacity: 0; } }
+@keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(150%); opacity: 0; } }
 #dashboard-fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--primary-color); color: white; border: none; border-radius: 50%; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2); font-size: 1.5em; transition: 0.3s; }
 .footer { margin-top: 60px; border-top: 1px solid #eee; padding-top: 25px; display: flex; justify-content: space-between; align-items: center; color: var(--light-text-color); }
-.whatsapp-icon i { font-size: 2.8em; color: #25D366; }
+.social-icons { display: flex; gap: 15px; font-size: 1.8em; }
+.social-icons a { color: var(--primary-color); transition: 0.3s; }
+.social-icons a:hover { transform: scale(1.2); color: var(--secondary-color); }
+.obs-container { background: #f9f9f9; padding: 20px; border-radius: 12px; border-left: 5px solid var(--primary-color); text-align: left; min-height: 100px; }
