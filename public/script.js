@@ -2,7 +2,6 @@ let estoque = [];
 let logs = [];
 let activeChart = null;
 let isFetching = false;
-let currentOpenModal = null;
 
 const CATEGORIES = ["HDD", "Memória RAM NB", "Memória RAM PC", "Placa Vídeo / GPU", "SSD M2", "SSD Sata", "Processador", "Placa Mãe", "Telefonia Móvel", "Equipamento Completo", "Infraestrutura", "Fonte / PSU", "Periférico", "Telefonia", "Suprimento", "Outros"];
 
@@ -23,7 +22,6 @@ function showToast(message, type = 'success') {
 async function fetchData(force = false) {
     if (isFetching) return;
     if (!force && estoque.length > 0 && logs.length > 0) return;
-
     isFetching = true;
     try {
         const [eRes, lRes] = await Promise.all([fetch('/api/estoque'), fetch('/api/log')]);
@@ -32,9 +30,7 @@ async function fetchData(force = false) {
         logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (err) {
         showToast('Erro de conexão', 'error');
-    } finally {
-        isFetching = false;
-    }
+    } finally { isFetching = false; }
 }
 
 async function openModal(templateId, isLarge = false, context = null, isSub = false) {
@@ -45,13 +41,8 @@ async function openModal(templateId, isLarge = false, context = null, isSub = fa
     host.appendChild(template.content.cloneNode(true));
     document.getElementById('modal-overlay').classList.add('active');
 
-    // Salva o estado se estivermos vindo do Estoque para voltar ao fechar
-    if (!isSub) {
-        currentOpenModal = templateId;
-    } else {
-        // Marcamos que ao fechar esta janela, devemos voltar ao estoque
-        host.dataset.backTo = 'template-estoque';
-    }
+    if (isSub) host.dataset.backTo = 'template-estoque';
+    else host.dataset.backTo = '';
 
     if (templateId === 'template-adicionar') setupFormAdicionar();
     if (templateId === 'template-estoque') setupEstoqueView();
@@ -67,41 +58,27 @@ async function openModal(templateId, isLarge = false, context = null, isSub = fa
 function closeModal() {
     const host = document.getElementById('modal-content-host');
     if (activeChart) { activeChart.destroy(); activeChart = null; }
-
-    // Lógica de navegação: se for sub-janela do estoque, volta pro estoque
     if (host.dataset.backTo === 'template-estoque') {
-        host.dataset.backTo = ''; // limpa
+        host.dataset.backTo = '';
         openModal('template-estoque', true);
     } else {
         document.getElementById('modal-overlay').classList.remove('active');
-        currentOpenModal = null;
     }
 }
 
 function setupFormAdicionar() {
     const form = document.getElementById('form-adicionar-item');
-    const btn = document.getElementById('btn-salvar');
     const checkPat = document.getElementById('check-patrimonio');
-    
     checkPat.onchange = () => {
         const container = document.getElementById('pat-input-container');
         const inputQtd = document.getElementById('input-qtd');
-        if (checkPat.checked) {
-            container.style.display = 'block';
-            inputQtd.value = 1;
-            inputQtd.disabled = true;
-        } else {
-            container.style.display = 'none';
-            inputQtd.disabled = false;
-        }
+        if (checkPat.checked) { container.style.display = 'block'; inputQtd.value = 1; inputQtd.disabled = true; }
+        else { container.style.display = 'none'; inputQtd.disabled = false; }
     };
-
     form.onsubmit = async (e) => {
         e.preventDefault();
-        if (btn.disabled) return;
+        const btn = document.getElementById('btn-salvar');
         btn.disabled = true;
-        btn.innerText = "Salvando...";
-
         const item = {
             categoria: form.categoria.value,
             identificacao: form.identificacao.value.trim(),
@@ -110,27 +87,17 @@ function setupFormAdicionar() {
             observacao: form.observacao.value.trim() || 'N/A',
             timestamp: new Date().toISOString()
         };
-
         const ex = estoque.find(i => i.identificacao.toLowerCase() === item.identificacao.toLowerCase() && i.categoria === item.categoria && i.patrimonio === 'N/A' && item.patrimonio === 'N/A');
-
-        if (ex) {
-            await fetch(`/api/estoque/${ex.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: ex.quantidade + item.quantidade, observacao: item.observacao }) });
-        } else {
-            await fetch('/api/estoque', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(item) });
-        }
-
+        if (ex) await fetch(`/api/estoque/${ex.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: ex.quantidade + item.quantidade, observacao: item.observacao }) });
+        else await fetch('/api/estoque', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(item) });
         await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp: item.timestamp, type: 'adicao', categoria: item.categoria, itemName: item.identificacao, quantity: item.quantidade, destino: 'Estoque Central' }) });
-
         showToast('Item registrado!');
         await fetchData(true);
-        
-        // Mantém a janela aberta e limpa o form
         form.reset();
         checkPat.checked = false;
         document.getElementById('pat-input-container').style.display = 'none';
         document.getElementById('input-qtd').disabled = false;
         btn.disabled = false;
-        btn.innerText = "Salvar Item";
     };
 }
 
@@ -143,14 +110,9 @@ function filterEstoque() {
     const nome = document.getElementById('f-est-nome').value.toLowerCase();
     const pat = document.getElementById('f-est-pat').value.toLowerCase();
     const cat = document.getElementById('f-est-cat').value;
-    
     let filtered = estoque.filter(i => {
-        const mNome = i.identificacao.toLowerCase().includes(nome);
-        const mPat = i.patrimonio.toLowerCase().includes(pat);
-        const mCat = cat === "" || i.categoria === cat;
-        return mNome && mPat && mCat;
+        return i.identificacao.toLowerCase().includes(nome) && i.patrimonio.toLowerCase().includes(pat) && (cat === "" || i.categoria === cat);
     });
-
     document.getElementById('corpo-tabela-estoque').innerHTML = filtered.map(i => `
         <tr>
             <td>${i.categoria}</td>
@@ -158,7 +120,7 @@ function filterEstoque() {
             <td>${i.quantidade}</td>
             <td>${i.patrimonio}</td>
             <td>
-                <i class="fa-solid fa-eye action-icon" style="color:#2c6e49" title="Ver Observações" onclick="openModal('template-observacao', false, '${i.identificacao}', true)"></i>
+                <i class="fa-solid fa-eye action-icon" style="color:#2c6e49" title="Ver Obs" onclick="openModal('template-observacao', false, '${i.identificacao}', true)"></i>
                 <i class="fa-solid fa-pencil action-icon" style="color:#0077b6" title="Editar" onclick="openModal('template-editar', false, '${i.id}', true)"></i>
                 <i class="fa-solid fa-arrow-right-from-bracket action-icon withdraw-icon" title="Retirar" onclick="openModal('template-retirar', false, '${i.id}', true)"></i>
                 <i class="fa-solid fa-trash action-icon delete-icon" title="Excluir" onclick="openModal('template-excluir', false, '${i.id}', true)"></i>
@@ -169,22 +131,8 @@ function filterEstoque() {
 
 function setupObservacaoView(itemName) {
     document.getElementById('obs-item-nome').innerText = itemName;
-    const lista = document.getElementById('lista-observacoes');
-    
-    // Filtra todos os itens que possuem este nome para pegar todas as observações
     const registros = estoque.filter(i => i.identificacao.toLowerCase() === itemName.toLowerCase());
-    
-    if (registros.length === 0) {
-        lista.innerHTML = "<p>Nenhum registro encontrado para este nome.</p>";
-        return;
-    }
-
-    lista.innerHTML = registros.map(r => `
-        <div class="obs-item">
-            <b>Quantidade:</b> ${r.quantidade} | <b>Patrimônio:</b> ${r.patrimonio}<br>
-            <b>Obs:</b> ${r.observacao || "Nenhuma observação registrada."}
-        </div>
-    `).join('');
+    document.getElementById('lista-observacoes').innerHTML = registros.map(r => `<div class="obs-item"><b>Qtd:</b> ${r.quantidade} | <b>Patr:</b> ${r.patrimonio}<br><b>Obs:</b> ${r.observacao || "---"}</div>`).join('');
 }
 
 function setupRelatorioView() {
@@ -200,27 +148,46 @@ async function filterRelatorio() {
     const acao = document.getElementById('f-rel-acao').value;
     const dataI = document.getElementById('f-rel-data-i').value;
     const dataF = document.getElementById('f-rel-data-f').value;
-
     let filtered = logs.filter(l => {
-        const mNome = l.itemName.toLowerCase().includes(nome);
-        const mCat = cat === "" || l.categoria === cat;
-        const mAcao = acao === "" || l.type === acao;
         const logDate = l.timestamp.split('T')[0];
-        const mDataI = dataI === "" || logDate >= dataI;
-        const mDataF = dataF === "" || logDate <= dataF;
-        return mNome && mCat && mAcao && mDataI && mDataF;
+        return l.itemName.toLowerCase().includes(nome) && (cat === "" || l.categoria === cat) && (acao === "" || l.type === acao) && (dataI === "" || logDate >= dataI) && (dataF === "" || logDate <= dataF);
     });
+    document.getElementById('corpo-tabela-log').innerHTML = filtered.map(l => `<tr><td>${new Date(l.timestamp).toLocaleString('pt-BR')}</td><td><b style="color:${l.type==='adicao'?'#2c6e49':l.type==='retirada'?'#fca311':'#d90429'}">${l.type.toUpperCase()}</b></td><td>${l.categoria}</td><td>${l.itemName}</td><td>${l.destino || '---'}</td><td>${l.quantity}</td></tr>`).join('');
+}
 
-    document.getElementById('corpo-tabela-log').innerHTML = filtered.map(l => `
-        <tr>
-            <td>${new Date(l.timestamp).toLocaleString('pt-BR')}</td>
-            <td><b style="color:${l.type==='adicao'?'#2c6e49':l.type==='retirada'?'#fca311':'#d90429'}">${l.type.toUpperCase()}</b></td>
-            <td>${l.categoria}</td>
-            <td>${l.itemName}</td>
-            <td>${l.destino || '---'}</td>
-            <td>${l.quantity}</td>
-        </tr>
-    `).join('');
+function setupFormEditar(id) {
+    const item = estoque.find(i => i.id === id);
+    const form = document.getElementById('form-editar-item');
+    const sel = document.getElementById('edit-categoria');
+    sel.innerHTML = CATEGORIES.map(c => `<option value="${c}" ${c === item.categoria ? 'selected' : ''}>${c}</option>`).join('');
+    document.getElementById('edit-identificacao').value = item.identificacao;
+    document.getElementById('edit-patrimonio').value = item.patrimonio;
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const novaIdentificacao = document.getElementById('edit-identificacao').value.trim();
+        const novaCategoria = form.categoria.value;
+        const novoPatrimonio = document.getElementById('edit-patrimonio').value.trim() || 'N/A';
+
+        // LÓGICA DE UNIFICAÇÃO
+        if (novoPatrimonio === 'N/A') {
+            const alvo = estoque.find(i => i.id !== id && i.identificacao.toLowerCase() === novaIdentificacao.toLowerCase() && i.categoria === novaCategoria && i.patrimonio === 'N/A');
+            if (alvo) {
+                // Soma no existente e apaga o atual
+                await fetch(`/api/estoque/${alvo.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: alvo.quantidade + item.quantidade }) });
+                await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
+                showToast('Item unificado com sucesso!');
+                await fetchData(true);
+                closeModal();
+                return;
+            }
+        }
+
+        await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ categoria: novaCategoria, identificacao: novaIdentificacao, patrimonio: novoPatrimonio }) });
+        showToast('Atualizado!');
+        await fetchData(true);
+        closeModal();
+    };
 }
 
 function setupFormExcluir(id) {
@@ -231,17 +198,12 @@ function setupFormExcluir(id) {
     const inputQtd = document.getElementById('excluir-qtd');
     inputQtd.max = item.quantidade;
     inputQtd.value = 1;
-
     form.onsubmit = async (e) => {
         e.preventDefault();
         const qtd = parseInt(inputQtd.value);
-        if (qtd > item.quantidade || qtd <= 0) return showToast('Quantidade inválida', 'error');
-
-        document.getElementById('btn-confirmar-exclusao').disabled = true;
-
+        if (qtd > item.quantidade || qtd <= 0) return showToast('Qtd inválida', 'error');
         if (item.quantidade === qtd) await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
         else await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: item.quantidade - qtd }) });
-
         await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp: new Date().toISOString(), type: 'exclusao', categoria: item.categoria, itemName: item.identificacao, quantity: qtd, destino: 'Removido' }) });
         showToast('Excluído!');
         await fetchData(true);
@@ -254,38 +216,20 @@ function setupFormRetirar(id) {
     const form = document.getElementById('form-retirar-item');
     document.getElementById('retirar-nome').value = item.identificacao;
     document.getElementById('max-retirar').innerText = item.quantidade;
+    document.getElementById('retirar-qtd').max = item.quantidade;
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('retirar-data').value = now.toISOString().slice(0, 16);
-
     form.onsubmit = async (e) => {
         e.preventDefault();
         const qtd = parseInt(document.getElementById('retirar-qtd').value);
         const destino = document.getElementById('retirar-destino').value.trim();
         const dt = document.getElementById('retirar-data').value;
-        if (qtd > item.quantidade || qtd <= 0) return showToast('Quantidade inválida', 'error');
-
+        if (qtd > item.quantidade || qtd <= 0) return showToast('Qtd inválida', 'error');
         if (item.quantidade === qtd) await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
         else await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: item.quantidade - qtd }) });
-
         await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp: new Date(dt).toISOString(), type: 'retirada', categoria: item.categoria, itemName: item.identificacao, quantity: qtd, destino: destino }) });
         showToast('Saída registrada!');
-        await fetchData(true);
-        closeModal();
-    };
-}
-
-function setupFormEditar(id) {
-    const item = estoque.find(i => i.id === id);
-    const form = document.getElementById('form-editar-item');
-    const sel = document.getElementById('edit-categoria');
-    sel.innerHTML = CATEGORIES.map(c => `<option value="${c}" ${c === item.categoria ? 'selected' : ''}>${c}</option>`).join('');
-    document.getElementById('edit-identificacao').value = item.identificacao;
-
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ categoria: form.categoria.value, identificacao: form.identificacao.value.trim() }) });
-        showToast('Atualizado!');
         await fetchData(true);
         closeModal();
     };
