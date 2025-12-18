@@ -3,7 +3,23 @@ const admin = require('firebase-admin');
 const path = require('path');
 const app = express();
 
-const serviceAccount = require("./serviceAccountKey.json");
+let serviceAccount;
+
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (err) {
+        console.error("Erro ao converter a variável FIREBASE_SERVICE_ACCOUNT para JSON.");
+        process.exit(1);
+    }
+} else {
+    try {
+        serviceAccount = require("./serviceAccountKey.json");
+    } catch (e) {
+        console.error("Credenciais do Firebase nao encontradas (Variavel ou Arquivo).");
+        process.exit(1);
+    }
+}
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -62,5 +78,5 @@ app.post('/api/log', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server: ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
