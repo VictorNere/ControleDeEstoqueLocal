@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c6e49">
-    <title>Inventário TI - Prefeitura</title>
+    <title>Inventário TI - Profissional</title>
     <link rel="icon" type="image/png" href="https://img.icons8.com/plasticine/100/box--v1.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -59,7 +59,7 @@
         <div class="filters-grid">
             <input type="text" id="f-est-nome" placeholder="Nome..." onkeyup="filterEstoque()">
             <input type="text" id="f-est-pat" placeholder="Patrimônio..." onkeyup="filterEstoque()">
-            <select id="f-est-cat" onchange="filterEstoque()"><option value="">Categorias</option></select>
+            <select id="f-est-cat" onchange="filterEstoque()"><option value="">Todas Categorias</option></select>
         </div>
         <div class="table-responsive">
             <table>
@@ -70,17 +70,17 @@
     </template>
 
     <template id="template-observacao">
-        <div class="modal-header"><h2>Observações: <span id="obs-item-nome"></span></h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Histórico de Observações: <span id="obs-item-nome"></span></h2><button class="close-button" onclick="closeModal()">×</button></div>
         <div id="lista-observacoes" class="obs-list"></div>
         <div class="center-btn"><button class="submit-btn" onclick="closeModal()">Voltar</button></div>
     </template>
 
     <template id="template-retirar">
-        <div class="modal-header"><h2>Retirada</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Retirada de Material</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <form id="form-retirar-item">
-            <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled class="readonly-input"></div>
+            <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled class="readonly-field"></div>
             <div class="form-group"><label>Quantidade (Máx: <span id="max-retirar"></span>)</label><input type="number" id="retirar-qtd" min="1" required></div>
-            <div class="form-group"><label>Destino</label><input type="text" id="retirar-destino" required placeholder="Para onde vai?"></div>
+            <div class="form-group"><label>Destino</label><input type="text" id="retirar-destino" required placeholder="Local de destino..."></div>
             <div class="form-group"><label>Data e Hora</label><input type="datetime-local" id="retirar-data" required></div>
             <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-retirada">Confirmar Saída</button></div>
         </form>
@@ -99,8 +99,8 @@
     <template id="template-excluir">
         <div class="modal-header"><h2>Excluir</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <form id="form-excluir-item">
-            <div class="form-group"><label>Item</label><input type="text" id="excluir-nome" disabled class="readonly-input"></div>
-            <div class="form-group"><label>Quantidade (Máx: <span id="max-excluir"></span>)</label><input type="number" id="excluir-qtd" min="1" required></div>
+            <div class="form-group"><label>Item</label><input type="text" id="excluir-nome" disabled class="readonly-field"></div>
+            <div class="form-group"><label>Qtd. a Excluir (Máx: <span id="max-excluir"></span>)</label><input type="number" id="excluir-qtd" min="1" required></div>
             <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-exclusao">Excluir Agora</button></div>
         </form>
     </template>
@@ -117,8 +117,8 @@
             <input type="date" id="f-rel-data-f" onchange="filterRelatorio()">
         </div>
         <div class="report-actions centralize">
-            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> Exportar XLSX</button>
-            <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash-can"></i> Limpar Base</button>
+            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> XLSX</button>
+            <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash"></i> Limpar Tudo</button>
         </div>
         <div class="table-responsive">
             <table>

@@ -27,7 +27,6 @@ async function fetchData(force = false) {
         const [eRes, lRes] = await Promise.all([fetch('/api/estoque'), fetch('/api/log')]);
         estoque = await eRes.json();
         logs = await lRes.json();
-        // ORDENAÇÃO CRONOLÓGICA RÍGIDA: Mais recente primeiro
         logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (err) {
         showToast('Erro de conexão', 'error');
@@ -81,7 +80,7 @@ function setupFormAdicionar() {
         const btn = document.getElementById('btn-salvar');
         btn.disabled = true;
         
-        const timestamp = new Date().toISOString(); // Gera timestamp preciso
+        const timestamp = new Date().toISOString();
         const item = {
             categoria: form.categoria.value,
             identificacao: form.identificacao.value.trim(),
@@ -99,7 +98,7 @@ function setupFormAdicionar() {
             await fetch('/api/estoque', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(item) });
         }
 
-        await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp, type: 'adicao', categoria: item.categoria, itemName: item.identificacao, quantity: item.quantity || item.quantidade, destino: 'Estoque Central' }) });
+        await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp, type: 'adicao', categoria: item.categoria, itemName: item.identificacao, quantity: item.quantidade, destino: 'Estoque Central', observacao: item.observacao }) });
 
         showToast('Item registrado!');
         await fetchData(true);
@@ -163,8 +162,18 @@ async function filterRelatorio() {
 
 function setupObservacaoView(itemName) {
     document.getElementById('obs-item-nome').innerText = itemName;
-    const registros = estoque.filter(i => i.identificacao.toLowerCase() === itemName.toLowerCase());
-    document.getElementById('lista-observacoes').innerHTML = registros.map(r => `<div class="obs-item"><b>Quantidade:</b> ${r.quantidade} | <b>Patrimônio:</b> ${r.patrimonio}<br><b>Obs:</b> ${r.observacao || "---"}</div>`).join('');
+    const entries = logs.filter(l => l.itemName.toLowerCase() === itemName.toLowerCase() && l.type === 'adicao');
+    if (entries.length === 0) {
+        document.getElementById('lista-observacoes').innerHTML = "<div class='obs-item'>Sem observações registradas nas adições.</div>";
+        return;
+    }
+    document.getElementById('lista-observacoes').innerHTML = entries.map(e => `
+        <div class="obs-item">
+            <b>Data:</b> ${new Date(e.timestamp).toLocaleString('pt-BR')}<br>
+            <b>Quantidade Adicionada:</b> ${e.quantity}<br>
+            <b>Observação:</b> ${e.observacao || "Nenhuma"}
+        </div>
+    `).join('');
 }
 
 function setupFormExcluir(id) {
@@ -178,12 +187,12 @@ function setupFormExcluir(id) {
     form.onsubmit = async (e) => {
         e.preventDefault();
         const qtd = parseInt(inputQtd.value);
-        if (qtd > item.quantidade || qtd <= 0) return showToast('Quantidade inválida', 'error');
+        if (qtd > item.quantidade || qtd <= 0) return showToast('Qtd inválida', 'error');
         const timestamp = new Date().toISOString();
         if (item.quantidade === qtd) await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
         else await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: item.quantidade - qtd }) });
         await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp, type: 'exclusao', categoria: item.categoria, itemName: item.identificacao, quantity: qtd, destino: 'Removido' }) });
-        showToast('Removido!');
+        showToast('Excluído!');
         await fetchData(true);
         closeModal();
     };
@@ -203,8 +212,8 @@ function setupFormRetirar(id) {
         const qtd = parseInt(document.getElementById('retirar-qtd').value);
         const destino = document.getElementById('retirar-destino').value.trim();
         const dtInput = document.getElementById('retirar-data').value;
-        const timestamp = new Date(dtInput).toISOString(); // Mantém a ordem se houver segundos
-        if (qtd > item.quantidade || qtd <= 0) return showToast('Quantidade inválida', 'error');
+        const timestamp = new Date(dtInput).toISOString();
+        if (qtd > item.quantidade || qtd <= 0) return showToast('Qtd inválida', 'error');
         if (item.quantidade === qtd) await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
         else await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: item.quantidade - qtd }) });
         await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp, type: 'retirada', categoria: item.categoria, itemName: item.identificacao, quantity: qtd, destino: destino }) });
@@ -252,7 +261,7 @@ async function setupHistoricoItem(nome) {
 }
 
 async function resetBase() {
-    if (!confirm('Apagar TUDO?')) return;
+    if (!confirm('Deseja apagar TUDO?')) return;
     await fetch('/api/reset', { method: 'DELETE' });
     showToast('Base limpa!');
     estoque = []; logs = [];
