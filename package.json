@@ -1,7 +1,6 @@
 {
-  "name": "estoque-pwa-firebase",
+  "name": "estoque-pwa",
   "version": "1.0.0",
-  "description": "Sistema de estoque PWA com Firebase e Gemini",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

@@ -19,7 +19,6 @@
             <button class="menu-button" onclick="openModal('template-adicionar')">Adicionar Item</button>
             <button class="menu-button" onclick="openModal('template-estoque', true)">Ver Estoque</button>
             <button class="menu-button" onclick="openModal('template-relatorio', true)">Relatórios</button>
-            <button class="menu-button ia-btn" onclick="analisarComGemini()">IA Sugestão</button>
         </div>
         <div class="footer">
             <p>&copy; 2025 Victor Gustavo Santin</p>
@@ -33,21 +32,51 @@
     </div>
     <div id="toast-container"></div>
     <div class="modal-overlay" id="modal-overlay"><div class="modal-content" id="modal-content-host"></div></div>
+
     <template id="template-adicionar">
         <div class="modal-header"><h2>Adicionar Novo Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <form id="form-adicionar-item">
-            <div class="form-group"><label>Categoria</label><select id="categoria" required><option value="">-- Escolha --</option><option value="HDD">HDD</option><option value="SSD">SSD</option><option value="Processador">Processador</option><option value="Memória">Memória</option><option value="Outros">Outros</option></select></div>
-            <div class="form-group"><label>Identificação</label><input type="text" id="identificacao" required></div>
-            <div class="form-group"><label>Quantidade</label><input type="number" id="quantidade" value="1" min="1" required></div>
-            <div class="form-group"><label>Possui Patrimônio?</label><div class="radio-options"><input type="radio" id="p-nao" name="p" value="nao" checked><label for="p-nao">Não</label><input type="radio" id="p-sim" name="p" value="sim"><label for="p-sim">Sim</label></div></div>
-            <div id="pat-container" style="display:none" class="form-group"><label>Número Patrimônio</label><input type="text" id="patrimonio"></div>
-            <button type="submit" class="submit-btn">Salvar Item</button>
+            <div class="form-group"><label for="categoria">Categoria</label><select id="categoria" required><option value="">-- Escolha --</option><option value="HDD">HDD</option><option value="Memória RAM NB">Memória RAM NB</option><option value="Memória RAM PC">Memória RAM PC</option><option value="Placa Vídeo / GPU">Placa Vídeo / GPU</option><option value="SSD M2">SSD M2</option><option value="SSD Sata">SSD Sata</option><option value="Processador">Processador</option><option value="Placa Mãe">Placa Mãe</option><option value="Telefonia Móvel">Telefonia Móvel</option><option value="Equipamento Completo">Equipamento Completo</option><option value="Infraestrutura">Infraestrutura</option><option value="Fonte / PSU">Fonte / PSU</option><option value="Periférico">Periférico</option><option value="Telefonia">Telefonia</option><option value="Suprimento">Suprimento</option><option value="Outros">Outros</option></select></div>
+            <div class="form-group"><label for="identificacao">Identificação</label><input type="text" id="identificacao" required></div>
+            <div class="form-group"><label for="quantidade">Quantidade</label><input type="number" id="quantidade" value="1" min="1" required></div>
+            <div class="form-group"><label for="data">Data de Entrada</label><input type="date" id="data" required></div>
+            <div class="form-group patrimonio-group"><label>Possui Patrimônio?</label><div class="radio-options"><input type="radio" id="patrimonio-nao" name="possui-patrimonio" value="nao" checked><label for="patrimonio-nao">Não</label><input type="radio" id="patrimonio-sim" name="possui-patrimonio" value="sim"><label for="patrimonio-sim">Sim</label></div></div>
+            <div id="patrimonio-input-container" class="form-group" style="display:none;"><label for="patrimonio-numero">Número do Patrimônio</label><input type="text" id="patrimonio-numero"></div>
+            <div class="form-group"><label for="observacao">Observação</label><textarea id="observacao"></textarea></div>
+            <button type="submit" class="submit-btn">Salvar</button>
         </form>
     </template>
+    
     <template id="template-estoque">
         <div class="modal-header"><h2>Estoque Atual</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Item</th><th>Qtd.</th><th>Patrimônio</th></tr></thead><tbody id="corpo-estoque"></tbody></table>
+        <div class="filtros-container"><div class="filtro-item"><input type="text" id="filtro-texto" placeholder="Buscar..."></div></div>
+        <table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Item</th><th>Qtd.</th><th>Patrimônio</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-estoque"></tbody></table>
     </template>
+
+    <template id="template-relatorio">
+        <div class="modal-header"><h2>Relatórios</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="report-summary"><div class="summary-card"><h3>Itens Totais</h3><p id="total-items-summary">0</p></div><div class="summary-card"><h3>Movimentos</h3><p id="total-moves-summary">0</p></div></div>
+        <table id="log-table"><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd.</th><th>Obs.</th></tr></thead><tbody id="corpo-tabela-log"></tbody></table>
+    </template>
+
+    <template id="template-editar">
+        <div class="modal-header"><h2>Editar Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-editar-item">
+            <input type="hidden" id="editar-id">
+            <div class="form-group"><label>Identificação</label><input type="text" id="identificacao-editar" required></div>
+            <button type="submit" class="submit-btn">Atualizar</button>
+        </form>
+    </template>
+
+    <template id="template-retirar">
+        <div class="modal-header"><h2>Retirar Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-retirar-item">
+            <input type="hidden" id="retirar-id">
+            <div class="form-group"><label>Quantidade a Retirar</label><input type="number" id="quantidade-retirar" min="1" required></div>
+            <button type="submit" class="submit-btn">Confirmar</button>
+        </form>
+    </template>
+
     <script type="module" src="script.js"></script>
 </body>
 </html>
