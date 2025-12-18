@@ -3,12 +3,12 @@ import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, deleteDoc, q
 import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "ID",
-    appId: "APP_ID"
+  apiKey: "AIzaSyBnmKq6lAQqqNn5zk8mHArOFpa9TLLXMIY",
+  authDomain: "controleestoque-5a906.firebaseapp.com",
+  projectId: "controleestoque-5a906",
+  storageBucket: "controleestoque-5a906.firebasestorage.app",
+  messagingSenderId: "2024881108",
+  appId: "1:2024881108:web:c281767f1dd5e4610bf441"
 };
 
 const app = initializeApp(firebaseConfig);
