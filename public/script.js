@@ -2,6 +2,7 @@ let estoque = [];
 let logs = [];
 let activeChart = null;
 let isFetching = false;
+let currentOpenModal = null;
 
 const CATEGORIES = ["HDD", "Memória RAM NB", "Memória RAM PC", "Placa Vídeo / GPU", "SSD M2", "SSD Sata", "Processador", "Placa Mãe", "Telefonia Móvel", "Equipamento Completo", "Infraestrutura", "Fonte / PSU", "Periférico", "Telefonia", "Suprimento", "Outros"];
 
@@ -36,13 +37,21 @@ async function fetchData(force = false) {
     }
 }
 
-async function openModal(templateId, isLarge = false, context = null) {
+async function openModal(templateId, isLarge = false, context = null, isSub = false) {
     const template = document.getElementById(templateId);
     const host = document.getElementById('modal-content-host');
     host.innerHTML = '';
     host.className = isLarge ? 'modal-content modal-lg' : 'modal-content';
     host.appendChild(template.content.cloneNode(true));
     document.getElementById('modal-overlay').classList.add('active');
+
+    // Salva o estado se estivermos vindo do Estoque para voltar ao fechar
+    if (!isSub) {
+        currentOpenModal = templateId;
+    } else {
+        // Marcamos que ao fechar esta janela, devemos voltar ao estoque
+        host.dataset.backTo = 'template-estoque';
+    }
 
     if (templateId === 'template-adicionar') setupFormAdicionar();
     if (templateId === 'template-estoque') setupEstoqueView();
@@ -52,12 +61,21 @@ async function openModal(templateId, isLarge = false, context = null) {
     if (templateId === 'template-editar') setupFormEditar(context);
     if (templateId === 'template-historico-item') setupHistoricoItem(context);
     if (templateId === 'template-dashboard') setupDashboard();
-    if (templateId === 'template-observacao') document.getElementById('texto-observacao').innerText = context || "Sem observações.";
+    if (templateId === 'template-observacao') setupObservacaoView(context);
 }
 
 function closeModal() {
+    const host = document.getElementById('modal-content-host');
     if (activeChart) { activeChart.destroy(); activeChart = null; }
-    document.getElementById('modal-overlay').classList.remove('active');
+
+    // Lógica de navegação: se for sub-janela do estoque, volta pro estoque
+    if (host.dataset.backTo === 'template-estoque') {
+        host.dataset.backTo = ''; // limpa
+        openModal('template-estoque', true);
+    } else {
+        document.getElementById('modal-overlay').classList.remove('active');
+        currentOpenModal = null;
+    }
 }
 
 function setupFormAdicionar() {
@@ -105,6 +123,8 @@ function setupFormAdicionar() {
 
         showToast('Item registrado!');
         await fetchData(true);
+        
+        // Mantém a janela aberta e limpa o form
         form.reset();
         checkPat.checked = false;
         document.getElementById('pat-input-container').style.display = 'none';
@@ -134,16 +154,36 @@ function filterEstoque() {
     document.getElementById('corpo-tabela-estoque').innerHTML = filtered.map(i => `
         <tr>
             <td>${i.categoria}</td>
-            <td><b class="item-link" onclick="openModal('template-historico-item', false, '${i.identificacao}')">${i.identificacao}</b></td>
+            <td><b class="item-link" onclick="openModal('template-historico-item', false, '${i.identificacao}', true)">${i.identificacao}</b></td>
             <td>${i.quantidade}</td>
             <td>${i.patrimonio}</td>
             <td>
-                <i class="fa-solid fa-eye action-icon" style="color:#2c6e49" onclick="openModal('template-observacao', false, '${i.observacao || 'N/A'}')"></i>
-                <i class="fa-solid fa-pencil action-icon" style="color:#0077b6" onclick="openModal('template-editar', false, '${i.id}')"></i>
-                <i class="fa-solid fa-arrow-right-from-bracket action-icon" style="color:#fca311" onclick="openModal('template-retirar', false, '${i.id}')"></i>
-                <i class="fa-solid fa-trash-can action-icon" style="color:#d90429" onclick="openModal('template-excluir', false, '${i.id}')"></i>
+                <i class="fa-solid fa-eye action-icon" style="color:#2c6e49" title="Ver Observações" onclick="openModal('template-observacao', false, '${i.identificacao}', true)"></i>
+                <i class="fa-solid fa-pencil action-icon" style="color:#0077b6" title="Editar" onclick="openModal('template-editar', false, '${i.id}', true)"></i>
+                <i class="fa-solid fa-arrow-right-from-bracket action-icon withdraw-icon" title="Retirar" onclick="openModal('template-retirar', false, '${i.id}', true)"></i>
+                <i class="fa-solid fa-trash action-icon delete-icon" title="Excluir" onclick="openModal('template-excluir', false, '${i.id}', true)"></i>
             </td>
         </tr>
+    `).join('');
+}
+
+function setupObservacaoView(itemName) {
+    document.getElementById('obs-item-nome').innerText = itemName;
+    const lista = document.getElementById('lista-observacoes');
+    
+    // Filtra todos os itens que possuem este nome para pegar todas as observações
+    const registros = estoque.filter(i => i.identificacao.toLowerCase() === itemName.toLowerCase());
+    
+    if (registros.length === 0) {
+        lista.innerHTML = "<p>Nenhum registro encontrado para este nome.</p>";
+        return;
+    }
+
+    lista.innerHTML = registros.map(r => `
+        <div class="obs-item">
+            <b>Quantidade:</b> ${r.quantidade} | <b>Patrimônio:</b> ${r.patrimonio}<br>
+            <b>Obs:</b> ${r.observacao || "Nenhuma observação registrada."}
+        </div>
     `).join('');
 }
 
@@ -259,7 +299,7 @@ async function setupHistoricoItem(nome) {
 }
 
 async function resetBase() {
-    if (!confirm('Apagar TUDO?')) return;
+    if (!confirm('Deseja apagar TUDO?')) return;
     await fetch('/api/reset', { method: 'DELETE' });
     showToast('Base limpa!');
     estoque = []; logs = [];

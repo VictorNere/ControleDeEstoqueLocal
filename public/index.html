@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c6e49">
-    <title>Inventário TI - Prefeitura</title>
+    <title>Inventário TI - Profissional</title>
     <link rel="icon" type="image/png" href="https://img.icons8.com/plasticine/100/box--v1.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -49,7 +49,7 @@
             <div class="form-group"><label>Quantidade</label><input type="number" name="quantidade" value="1" min="1" required id="input-qtd"></div>
             <div class="form-group checkbox-container"><label class="styled-checkbox"><input type="checkbox" id="check-patrimonio"> <span>Há Patrimônio?</span></label></div>
             <div id="pat-input-container" class="form-group" style="display:none;"><label>Número do Patrimônio</label><input type="text" id="patrimonio-numero" placeholder="Digite o patrimônio..."></div>
-            <div class="form-group"><label>Observação</label><textarea name="observacao" placeholder="Notas sobre a entrada..."></textarea></div>
+            <div class="form-group"><label>Observação</label><textarea name="observacao" placeholder="Notas sobre este item..."></textarea></div>
             <div class="center-btn"><button type="submit" class="submit-btn" id="btn-salvar">Salvar Item</button></div>
         </form>
     </template>
@@ -60,7 +60,7 @@
             <input type="text" id="f-est-nome" placeholder="Nome..." onkeyup="filterEstoque()">
             <input type="text" id="f-est-pat" placeholder="Patrimônio..." onkeyup="filterEstoque()">
             <select id="f-est-cat" onchange="filterEstoque()">
-                <option value="">Categorias</option>
+                <option value="">Todas Categorias</option>
                 <option value="HDD">HDD</option><option value="Memória RAM NB">Memória RAM NB</option><option value="Memória RAM PC">Memória RAM PC</option><option value="Placa Vídeo / GPU">Placa Vídeo / GPU</option><option value="SSD M2">SSD M2</option><option value="SSD Sata">SSD Sata</option><option value="Processador">Processador</option><option value="Placa Mãe">Placa Mãe</option><option value="Telefonia Móvel">Telefonia Móvel</option><option value="Equipamento Completo">Equipamento Completo</option><option value="Infraestrutura">Infraestrutura</option><option value="Fonte / PSU">Fonte / PSU</option><option value="Periférico">Periférico</option><option value="Telefonia">Telefonia</option><option value="Suprimento">Suprimento</option><option value="Outros">Outros</option>
             </select>
         </div>
@@ -73,22 +73,13 @@
     </template>
 
     <template id="template-observacao">
-        <div class="modal-header"><h2>Observação do Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div class="obs-container"><p id="texto-observacao"></p></div>
-        <div class="center-btn"><button class="submit-btn" onclick="closeModal()">Fechar</button></div>
-    </template>
-
-    <template id="template-excluir">
-        <div class="modal-header"><h2>Excluir Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <form id="form-excluir-item">
-            <div class="form-group"><label>Item</label><input type="text" id="excluir-nome" disabled></div>
-            <div class="form-group"><label>Quantidade a Excluir (Máx: <span id="max-excluir"></span>)</label><input type="number" id="excluir-qtd" min="1" required></div>
-            <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-exclusao">Confirmar Exclusão</button></div>
-        </form>
+        <div class="modal-header"><h2>Observações: <span id="obs-item-nome"></span></h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div id="lista-observacoes" class="obs-list"></div>
+        <div class="center-btn"><button class="submit-btn" onclick="closeModal()">Voltar</button></div>
     </template>
 
     <template id="template-retirar">
-        <div class="modal-header"><h2>Retirada</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Retirada de Material</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <form id="form-retirar-item">
             <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled></div>
             <div class="form-group"><label>Quantidade (Máx: <span id="max-retirar"></span>)</label><input type="number" id="retirar-qtd" min="1" required></div>
@@ -98,8 +89,26 @@
         </form>
     </template>
 
+    <template id="template-editar">
+        <div class="modal-header"><h2>Editar Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-editar-item">
+            <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
+            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
+            <div class="center-btn"><button type="submit" class="submit-btn" id="btn-editar-salvar">Atualizar</button></div>
+        </form>
+    </template>
+
+    <template id="template-excluir">
+        <div class="modal-header"><h2>Excluir Registro</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-excluir-item">
+            <div class="form-group"><label>Item</label><input type="text" id="excluir-nome" disabled></div>
+            <div class="form-group"><label>Qtd. para Excluir (Máx: <span id="max-excluir"></span>)</label><input type="number" id="excluir-qtd" min="1" required></div>
+            <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-exclusao">Excluir Agora</button></div>
+        </form>
+    </template>
+
     <template id="template-relatorio">
-        <div class="modal-header"><h2>Relatório</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Relatório Geral</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <div class="filters-grid-rel">
             <input type="text" id="f-rel-nome" placeholder="Item..." onkeyup="filterRelatorio()">
             <select id="f-rel-cat" onchange="filterRelatorio()"><option value="">Categorias</option></select>
@@ -113,7 +122,7 @@
             <input type="date" id="f-rel-data-f" onchange="filterRelatorio()">
         </div>
         <div class="report-actions centralize">
-            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> Exportar</button>
+            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> XLSX</button>
             <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash"></i> Limpar Tudo</button>
         </div>
         <div class="table-responsive">
@@ -122,15 +131,6 @@
                 <tbody id="corpo-tabela-log"></tbody>
             </table>
         </div>
-    </template>
-
-    <template id="template-editar">
-        <div class="modal-header"><h2>Editar</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <form id="form-editar-item">
-            <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
-            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
-            <div class="center-btn"><button type="submit" class="submit-btn" id="btn-editar-salvar">Atualizar</button></div>
-        </form>
     </template>
 
     <template id="template-historico-item">
@@ -142,7 +142,7 @@
 
     <template id="template-dashboard">
         <div class="modal-header"><h2>Dashboard</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div id="dashboard-content"><canvas id="main-chart-canvas"></canvas></div>
+        <div class="chart-container"><canvas id="main-chart-canvas"></canvas></div>
     </template>
 
     <script src="script.js"></script>
