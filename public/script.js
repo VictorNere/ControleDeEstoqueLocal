@@ -2,6 +2,8 @@ let estoque = [];
 let logs = [];
 let activeChart = null;
 
+const CATEGORIES = ["HDD", "Memória RAM NB", "Memória RAM PC", "Placa Vídeo / GPU", "SSD M2", "SSD Sata", "Processador", "Placa Mãe", "Telefonia Móvel", "Equipamento Completo", "Infraestrutura", "Fonte / PSU", "Periférico", "Telefonia", "Suprimento", "Outros"];
+
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
 function showToast(message, type = 'success') {
@@ -22,7 +24,7 @@ async function fetchData() {
         estoque = await eRes.json();
         logs = await lRes.json();
     } catch (err) {
-        showToast('Erro ao conectar com o banco de dados', 'error');
+        showToast('Erro de conexão com o banco', 'error');
     }
 }
 
@@ -38,6 +40,7 @@ async function openModal(templateId, isLarge = false, context = null) {
     if (templateId === 'template-estoque') setupEstoqueView();
     if (templateId === 'template-relatorio') setupRelatorioView();
     if (templateId === 'template-editar') setupFormEditar(context);
+    if (templateId === 'template-retirar') setupFormRetirar(context);
     if (templateId === 'template-historico-item') setupHistoricoItem(context);
     if (templateId === 'template-dashboard') setupDashboard();
 }
@@ -68,9 +71,8 @@ function setupFormAdicionar() {
     form.onsubmit = async (e) => {
         e.preventDefault();
         if (btn.disabled) return;
-        
         btn.disabled = true;
-        btn.innerText = "Processando...";
+        btn.innerText = "Salvando...";
 
         const item = {
             categoria: form.categoria.value,
@@ -83,9 +85,9 @@ function setupFormAdicionar() {
 
         try {
             await fetchData();
-            const existente = estoque.find(i => i.identificacao.toLowerCase() === item.identificacao.toLowerCase() && i.categoria === item.categoria && i.patrimonio === 'N/A');
+            const existente = estoque.find(i => i.identificacao.toLowerCase() === item.identificacao.toLowerCase() && i.categoria === item.categoria && i.patrimonio === 'N/A' && item.patrimonio === 'N/A');
 
-            if (existente && item.patrimonio === 'N/A') {
+            if (existente) {
                 await fetch(`/api/estoque/${existente.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -107,17 +109,17 @@ function setupFormAdicionar() {
                     type: 'adicao',
                     categoria: item.categoria,
                     itemName: item.identificacao,
-                    quantity: item.quantidade
+                    quantity: item.quantidade,
+                    destino: 'Estoque Central'
                 })
             });
 
-            showToast('Item registrado com sucesso!');
+            showToast('Item registrado!');
             closeModal();
         } catch (err) {
-            showToast('Erro ao salvar no Firebase', 'error');
+            showToast('Erro ao salvar', 'error');
         } finally {
             btn.disabled = false;
-            btn.innerText = "Salvar Item";
         }
     };
 }
@@ -132,9 +134,9 @@ async function setupEstoqueView() {
                 <td>${i.quantidade}</td>
                 <td>${i.patrimonio}</td>
                 <td>
-                    <i class="fa-solid fa-pencil action-icon edit-icon" title="Editar" onclick="openModal('template-editar', false, '${i.id}')"></i>
-                    <i class="fa-solid fa-arrow-trend-down action-icon withdraw-icon" title="Retirar" onclick="retirarItem('${i.id}')"></i>
-                    <i class="fa-solid fa-trash-can action-icon delete-icon" title="Excluir" onclick="excluirItem('${i.id}')"></i>
+                    <i class="fa-solid fa-pencil action-icon edit-icon" onclick="openModal('template-editar', false, '${i.id}')"></i>
+                    <i class="fa-solid fa-arrow-right-from-bracket action-icon withdraw-icon" onclick="openModal('template-retirar', false, '${i.id}')"></i>
+                    <i class="fa-solid fa-trash-can action-icon delete-icon" onclick="excluirItem('${i.id}')"></i>
                 </td>
             </tr>
         `).join('');
@@ -150,9 +152,7 @@ function setupFormEditar(id) {
     const item = estoque.find(i => i.id === id);
     const form = document.getElementById('form-editar-item');
     const sel = document.getElementById('edit-categoria');
-    const cats = ["HDD", "Memória RAM NB", "Memória RAM PC", "Placa Vídeo / GPU", "SSD M2", "SSD Sata", "Processador", "Placa Mãe", "Outros"];
-    
-    sel.innerHTML = cats.map(c => `<option value="${c}" ${c === item.categoria ? 'selected' : ''}>${c}</option>`).join('');
+    sel.innerHTML = CATEGORIES.map(c => `<option value="${c}" ${c === item.categoria ? 'selected' : ''}>${c}</option>`).join('');
     document.getElementById('edit-identificacao').value = item.identificacao;
 
     form.onsubmit = async (e) => {
@@ -160,52 +160,68 @@ function setupFormEditar(id) {
         await fetch(`/api/estoque/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                categoria: form.categoria.value,
-                identificacao: form.identificacao.value.trim()
-            })
+            body: JSON.stringify({ categoria: form.categoria.value, identificacao: form.identificacao.value.trim() })
         });
-        showToast('Item atualizado!');
+        showToast('Atualizado!');
         closeModal();
     };
 }
 
-async function retirarItem(id) {
+function setupFormRetirar(id) {
     const item = estoque.find(i => i.id === id);
-    const qtd = prompt(`Retirar quantos de ${item.identificacao}?`, "1");
-    if (!qtd) return;
-    const val = parseInt(qtd);
-    if (isNaN(val) || val > item.quantidade || val <= 0) return showToast('Qtd inválida', 'error');
+    const form = document.getElementById('form-retirar-item');
+    const btn = document.getElementById('btn-confirmar-retirada');
+    
+    document.getElementById('retirar-nome').value = item.identificacao;
+    document.getElementById('max-retirar').innerText = item.quantidade;
+    document.getElementById('retirar-qtd').max = item.quantidade;
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('retirar-data').value = now.toISOString().slice(0, 16);
 
-    if (item.quantidade === val) {
-        await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
-    } else {
-        await fetch(`/api/estoque/${id}`, {
-            method: 'PUT',
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const qtd = parseInt(document.getElementById('retirar-qtd').value);
+        const destino = document.getElementById('retirar-destino').value.trim();
+        const dataManual = document.getElementById('retirar-data').value;
+
+        if (qtd > item.quantidade || qtd <= 0) return showToast('Quantidade inválida', 'error');
+        
+        btn.disabled = true;
+        
+        if (item.quantidade === qtd) {
+            await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
+        } else {
+            await fetch(`/api/estoque/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantidade: item.quantidade - qtd })
+            });
+        }
+
+        await fetch('/api/log', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quantidade: item.quantidade - val })
+            body: JSON.stringify({
+                timestamp: new Date(dataManual).toISOString(),
+                type: 'retirada',
+                categoria: item.categoria,
+                itemName: item.identificacao,
+                quantity: qtd,
+                destino: destino
+            })
         });
-    }
 
-    await fetch('/api/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            timestamp: new Date().toISOString(),
-            type: 'retirada',
-            categoria: item.categoria,
-            itemName: item.identificacao,
-            quantity: val
-        })
-    });
-    showToast('Retirada registrada!');
-    setupEstoqueView();
+        showToast('Saída registrada!');
+        closeModal();
+    };
 }
 
 async function excluirItem(id) {
-    if (!confirm('Deseja apagar este item permanentemente do sistema?')) return;
+    if (!confirm('Excluir este item permanentemente?')) return;
     await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
-    showToast('Item removido!');
+    showToast('Item removido');
     setupEstoqueView();
 }
 
@@ -214,9 +230,10 @@ async function setupRelatorioView() {
     document.getElementById('corpo-tabela-log').innerHTML = logs.map(l => `
         <tr>
             <td>${new Date(l.timestamp).toLocaleString('pt-BR')}</td>
-            <td><b style="color:${l.type==='adicao'?'green':'red'}">${l.type.toUpperCase()}</b></td>
+            <td><b style="color:${l.type==='adicao'?'#2c6e49':'#d90429'}">${l.type.toUpperCase()}</b></td>
             <td>${l.categoria}</td>
             <td>${l.itemName}</td>
+            <td>${l.destino || '---'}</td>
             <td>${l.quantity}</td>
         </tr>
     `).join('');
@@ -228,17 +245,18 @@ async function setupHistoricoItem(nome) {
     const filtrados = logs.filter(l => l.itemName.toLowerCase() === nome.toLowerCase());
     document.getElementById('corpo-hist-item').innerHTML = filtrados.map(l => `
         <tr>
-            <td>${new Date(l.timestamp).toLocaleDateString()}</td>
+            <td>${new Date(l.timestamp).toLocaleString('pt-BR')}</td>
             <td>${l.type.toUpperCase()}</td>
+            <td>${l.destino || '---'}</td>
             <td>${l.quantity}</td>
         </tr>
     `).join('');
 }
 
 async function resetBase() {
-    if (!confirm('ALERTA CRÍTICO: Isso apagará TODOS os dados para sempre. Confirmar?')) return;
+    if (!confirm('Deseja apagar TODOS os dados do Firebase?')) return;
     await fetch('/api/reset', { method: 'DELETE' });
-    showToast('Base de dados limpa!');
+    showToast('Base limpa!');
     closeModal();
 }
 
@@ -246,7 +264,7 @@ function exportarXLSX() {
     const ws = XLSX.utils.json_to_sheet(logs);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Logs");
-    XLSX.writeFile(wb, "Relatorio_EstoqueIT.xlsx");
+    XLSX.writeFile(wb, "Relatorio_Estoque.xlsx");
 }
 
 document.getElementById('dashboard-fab').onclick = () => openModal('template-dashboard', true);
@@ -258,7 +276,7 @@ async function setupDashboard() {
         return acc;
     }, {});
     activeChart = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: Object.keys(data),
             datasets: [{ data: Object.values(data), backgroundColor: ['#2c6e49', '#4c956c', '#ffc9B5', '#d90429', '#0077b6', '#fca311'] }]
