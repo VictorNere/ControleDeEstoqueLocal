@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c6e49">
-    <title>Sistema de Estoque PWA</title>
+    <title>Estoque PWA</title>
     <link rel="icon" type="image/png" href="https://img.icons8.com/plasticine/100/box--v1.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -23,9 +23,7 @@
         </div>
         <div class="footer">
             <p>&copy; 2025 Victor Gustavo Santin</p>
-            <a href="https://wa.me/54981661623" target="_blank" rel="noopener noreferrer" class="whatsapp-icon">
-                <i class="fa-brands fa-whatsapp"></i>
-            </a>
+            <a href="https://wa.me/54981661623" target="_blank" rel="noopener noreferrer" class="whatsapp-icon"><i class="fa-brands fa-whatsapp"></i></a>
         </div>
     </div>
     <div id="toast-container"></div>
@@ -35,45 +33,48 @@
     <template id="template-adicionar">
         <div class="modal-header"><h2>Novo Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <form id="form-adicionar-item">
-            <div class="form-group"><label>Categoria</label><select id="categoria" required><option value="HDD">HDD</option><option value="Memória RAM NB">Memória RAM NB</option><option value="Memória RAM PC">Memória RAM PC</option><option value="Placa Vídeo / GPU">Placa Vídeo / GPU</option><option value="SSD M2">SSD M2</option><option value="SSD Sata">SSD Sata</option><option value="Processador">Processador</option><option value="Placa Mãe">Placa Mãe</option><option value="Telefonia Móvel">Telefonia Móvel</option><option value="Equipamento Completo">Equipamento Completo</option><option value="Infraestrutura">Infraestrutura</option><option value="Fonte / PSU">Fonte / PSU</option><option value="Periférico">Periférico</option><option value="Telefonia">Telefonia</option><option value="Suprimento">Suprimento</option><option value="Outros">Outros</option></select></div>
-            <div class="form-group"><label>Identificação</label><input type="text" id="identificacao" required></div>
-            <div class="form-group"><label>Quantidade</label><input type="number" id="quantidade" value="1" min="1" required></div>
-            <div class="form-group"><label>Data</label><input type="date" id="data" required></div>
-            <div class="form-group patrimonio-group"><label>Patrimônio?</label><div class="radio-options"><input type="radio" id="p-nao" name="p" value="nao" checked><label for="p-nao">Não</label><input type="radio" id="p-sim" name="p" value="sim"><label for="p-sim">Sim</label></div></div>
+            <div class="form-group"><label>Categoria</label><select name="categoria" required><option value="HDD">HDD</option><option value="Memória RAM NB">Memória RAM NB</option><option value="Memória RAM PC">Memória RAM PC</option><option value="Placa Vídeo / GPU">Placa Vídeo / GPU</option><option value="SSD M2">SSD M2</option><option value="SSD Sata">SSD Sata</option><option value="Processador">Processador</option><option value="Placa Mãe">Placa Mãe</option><option value="Outros">Outros</option></select></div>
+            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" required></div>
+            <div class="form-group"><label>Quantidade</label><input type="number" name="quantidade" value="1" min="1" required id="input-qtd"></div>
+            <div class="form-group checkbox-group"><label class="switch-label"><input type="checkbox" id="check-patrimonio"> Há Patrimônio?</label></div>
             <div id="pat-input-container" class="form-group" style="display:none;"><label>Número do Patrimônio</label><input type="text" id="patrimonio-numero"></div>
-            <div class="form-group"><label>Observação</label><textarea id="observacao"></textarea></div>
-            <div class="form-actions"><button type="submit" class="submit-btn">Salvar</button></div>
+            <div class="form-group"><label>Observação</label><textarea name="observacao"></textarea></div>
+            <button type="submit" class="submit-btn" id="btn-salvar">Salvar Item</button>
+        </form>
+    </template>
+
+    <template id="template-editar">
+        <div class="modal-header"><h2>Editar Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-editar-item">
+            <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
+            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
+            <button type="submit" class="submit-btn" id="btn-editar-salvar">Atualizar</button>
         </form>
     </template>
 
     <template id="template-estoque">
-        <div class="modal-header"><h2>Estoque Atual</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div class="filtros-container"><div class="filtro-item"><input type="text" id="filtro-texto" placeholder="Filtrar..."></div></div>
-        <table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Item</th><th>Qtd.</th><th>Patr.</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-estoque"></tbody></table>
+        <div class="modal-header"><h2>Estoque</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="filtros-container"><input type="text" id="filtro-texto" placeholder="Buscar item ou patrimônio..."></div>
+        <table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Identificação</th><th>Qtd.</th><th>Patr.</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-estoque"></tbody></table>
     </template>
 
     <template id="template-relatorio">
-        <div class="modal-header report-header"><h2>Movimentações</h2><div class="report-actions"><button class="action-btn" onclick="exportarXLSX()">Exportar XLSX</button></div><button class="close-button" onclick="closeModal()">×</button></div>
-        <table id="log-table"><thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Item</th><th>Qtd.</th></tr></thead><tbody id="corpo-tabela-log"></tbody></table>
+        <div class="modal-header report-header"><h2>Relatório</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="report-actions">
+            <button class="action-btn" onclick="exportarXLSX()">Exportar XLSX</button>
+            <button class="action-btn danger" onclick="resetBase()">Remover Base de Dados</button>
+        </div>
+        <table id="log-table"><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd.</th></tr></thead><tbody id="corpo-tabela-log"></tbody></table>
+    </template>
+
+    <template id="template-historico-item">
+        <div class="modal-header"><h2 id="hist-titulo">Histórico</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <table><thead><tr><th>Data</th><th>Tipo</th><th>Qtd.</th></tr></thead><tbody id="corpo-hist-item"></tbody></table>
     </template>
 
     <template id="template-dashboard">
-        <div class="modal-header"><h2 id="dashboard-title">Dashboard</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div id="dashboard-content"></div>
-        <template id="sub-template-dashboard-menu">
-            <div class="dashboard-menu">
-                <button class="chart-select-btn" onclick="showChart('comparacaoItemTotal')">Estoque Total vs Item</button>
-                <button class="chart-select-btn" onclick="showChart('movimentacaoItem')">Histórico de Item</button>
-                <button class="chart-select-btn" onclick="showChart('movimentosPeriodo')">Movimentos por Período</button>
-            </div>
-        </template>
-        <template id="sub-template-chart-view">
-            <button class="action-btn backup back-to-menu-btn" onclick="showDashboardMenu()">← Voltar</button>
-            <div class="chart-container">
-                <div id="chart-controls" class="filtros-container"></div>
-                <canvas id="main-chart-canvas"></canvas>
-            </div>
-        </template>
+        <div class="modal-header"><h2>Dashboard</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div id="dashboard-content"><canvas id="main-chart-canvas"></canvas></div>
     </template>
 
     <script src="script.js"></script>

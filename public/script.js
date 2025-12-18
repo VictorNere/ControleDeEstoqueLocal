@@ -2,9 +2,7 @@ let estoque = [];
 let logs = [];
 let activeChart = null;
 
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
-}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -24,7 +22,7 @@ async function fetchData() {
     logs = await lRes.json();
 }
 
-async function openModal(templateId, isLarge = false) {
+async function openModal(templateId, isLarge = false, context = null) {
     const template = document.getElementById(templateId);
     const host = document.getElementById('modal-content-host');
     host.innerHTML = '';
@@ -35,7 +33,8 @@ async function openModal(templateId, isLarge = false) {
     if (templateId === 'template-adicionar') setupFormAdicionar();
     if (templateId === 'template-estoque') setupEstoqueView();
     if (templateId === 'template-relatorio') setupRelatorioView();
-    if (templateId === 'template-dashboard') setupDashboardView();
+    if (templateId === 'template-editar') setupFormEditar(context);
+    if (templateId === 'template-historico-item') setupHistoricoItem(context);
 }
 
 function closeModal() {
@@ -45,155 +44,218 @@ function closeModal() {
 
 function setupFormAdicionar() {
     const form = document.getElementById('form-adicionar-item');
-    document.getElementById('data').valueAsDate = new Date();
-    form.querySelector('#p-sim').onclick = () => document.getElementById('pat-input-container').style.display = 'block';
-    form.querySelector('#p-nao').onclick = () => document.getElementById('pat-input-container').style.display = 'none';
+    const btn = document.getElementById('btn-salvar');
+    const checkPat = document.getElementById('check-patrimonio');
+    const inputQtd = document.getElementById('input-qtd');
+    document.querySelector('input[name="data"]').valueAsDate = new Date();
+
+    checkPat.onchange = () => {
+        const container = document.getElementById('pat-input-container');
+        if (checkPat.checked) {
+            container.style.display = 'block';
+            inputQtd.value = 1;
+            inputQtd.disabled = true;
+        } else {
+            container.style.display = 'none';
+            inputQtd.disabled = false;
+        }
+    };
 
     form.onsubmit = async (e) => {
         e.preventDefault();
-        await fetchData();
+        btn.disabled = true;
+        btn.innerText = "Salvando...";
+
         const item = {
             categoria: form.categoria.value,
             identificacao: form.identificacao.value.trim(),
             quantidade: parseInt(form.quantidade.value),
-            patrimonio: form.p.value === 'sim' ? form.querySelector('#patrimonio-numero').value.trim() : 'N/A'
+            patrimonio: checkPat.checked ? document.getElementById('patrimonio-numero').value.trim() : 'N/A',
+            observacao: form.observacao.value
         };
 
-        let novoEstoque = [...estoque];
-        const existente = novoEstoque.find(i => i.identificacao === item.identificacao && i.categoria === item.categoria && i.patrimonio === 'N/A');
+        try {
+            await fetchData();
+            const existente = estoque.find(i => i.identificacao.toLowerCase() === item.identificacao.toLowerCase() && i.categoria === item.categoria && i.patrimonio === 'N/A');
 
-        if (existente && item.patrimonio === 'N/A') {
-            existente.quantidade += item.quantidade;
-        } else {
-            novoEstoque.push(item);
-        }
+            if (existente && item.patrimonio === 'N/A') {
+                await fetch(`/api/estoque/${existente.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantidade: existente.quantidade + item.quantidade })
+                });
+            } else {
+                await fetch('/api/estoque', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                });
+            }
 
-        const res = await fetch('/api/estoque', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(novoEstoque)
-        });
-
-        if (res.ok) {
             await fetch('/api/log', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     timestamp: new Date().toISOString(),
                     type: 'adicao',
-                    categoria: item.categoria,
                     itemName: item.identificacao,
                     quantity: item.quantidade
                 })
             });
-            showToast('Salvo!');
+
+            showToast('Item registrado!');
             closeModal();
+        } catch (err) {
+            showToast('Erro ao salvar', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Salvar Item";
         }
     };
 }
 
 async function setupEstoqueView() {
     await fetchData();
-    renderEstoqueTable(estoque);
+    const render = (data) => {
+        document.getElementById('corpo-tabela-estoque').innerHTML = data.map(i => `
+            <tr>
+                <td>${i.categoria}</td>
+                <td><span class="item-link" onclick="openModal('template-historico-item', false, '${i.identificacao}')">${i.identificacao}</span></td>
+                <td>${i.quantidade}</td>
+                <td>${i.patrimonio}</td>
+                <td>
+                    <i class="fa-solid fa-pencil action-icon edit-icon" onclick="openModal('template-editar', false, '${i.id}')"></i>
+                    <i class="fa-solid fa-arrow-down action-icon withdraw-icon" onclick="retirarItem('${i.id}')"></i>
+                    <i class="fa-solid fa-trash action-icon delete-icon" onclick="excluirItem('${i.id}')"></i>
+                </td>
+            </tr>
+        `).join('');
+    };
+    render(estoque);
     document.getElementById('filtro-texto').onkeyup = (e) => {
         const val = e.target.value.toLowerCase();
-        renderEstoqueTable(estoque.filter(i => i.identificacao.toLowerCase().includes(val) || i.patrimonio.toLowerCase().includes(val)));
+        render(estoque.filter(i => i.identificacao.toLowerCase().includes(val) || i.patrimonio.toLowerCase().includes(val)));
     };
 }
 
-function renderEstoqueTable(data) {
-    document.getElementById('corpo-tabela-estoque').innerHTML = data.map(i => `
-        <tr>
-            <td>${i.categoria}</td>
-            <td>${i.identificacao}</td>
-            <td>${i.quantidade}</td>
-            <td>${i.patrimonio}</td>
-            <td><button class="action-btn" onclick="retirarItem('${i.firebaseId}')">Retirar</button></td>
-        </tr>
-    `).join('');
-}
+function setupFormEditar(id) {
+    const item = estoque.find(i => i.id === id);
+    const form = document.getElementById('form-editar-item');
+    const sel = document.getElementById('edit-categoria');
+    
+    const cats = ["HDD", "Memória RAM NB", "Memória RAM PC", "Placa Vídeo / GPU", "SSD M2", "SSD Sata", "Processador", "Placa Mãe", "Outros"];
+    sel.innerHTML = cats.map(c => `<option value="${c}" ${c === item.categoria ? 'selected' : ''}>${c}</option>`).join('');
+    document.getElementById('edit-identificacao').value = item.identificacao;
 
-async function retirarItem(fId) {
-    await fetchData();
-    const item = estoque.find(i => i.firebaseId === fId);
-    const qtd = prompt(`Retirar quantos de ${item.identificacao}? (Máx: ${item.quantidade})`, "1");
-    const valor = parseInt(qtd);
-    if (!valor || valor <= 0 || valor > item.quantidade) return;
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-editar-salvar');
+        btn.disabled = true;
 
-    item.quantidade -= valor;
-    const novoEstoque = item.quantidade === 0 ? estoque.filter(i => i.firebaseId !== fId) : estoque;
-
-    const res = await fetch('/api/estoque', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(novoEstoque.map(({firebaseId, ...rest}) => rest))
-    });
-
-    if (res.ok) {
-        await fetch('/api/log', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+        await fetch(`/api/estoque/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                timestamp: new Date().toISOString(),
-                type: 'retirada',
-                categoria: item.categoria,
-                itemName: item.identificacao,
-                quantity: valor
+                categoria: form.categoria.value,
+                identificacao: form.identificacao.value.trim()
             })
         });
-        showToast('Retirado!');
-        setupEstoqueView();
+
+        showToast('Atualizado!');
+        closeModal();
+    };
+}
+
+async function retirarItem(id) {
+    const item = estoque.find(i => i.id === id);
+    const qtd = prompt(`Retirar quantos de ${item.identificacao}?`, "1");
+    if (!qtd) return;
+    const valor = parseInt(qtd);
+    if (valor > item.quantidade || valor <= 0) return showToast('Quantidade inválida', 'error');
+
+    if (item.quantidade === valor) {
+        await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
+    } else {
+        await fetch(`/api/estoque/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantidade: item.quantidade - valor })
+        });
     }
+
+    await fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            type: 'retirada',
+            itemName: item.identificacao,
+            quantity: valor
+        })
+    });
+    showToast('Retirado!');
+    setupEstoqueView();
+}
+
+async function excluirItem(id) {
+    if (!confirm('Excluir este item permanentemente?')) return;
+    await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
+    showToast('Excluído!');
+    setupEstoqueView();
 }
 
 async function setupRelatorioView() {
     await fetchData();
     document.getElementById('corpo-tabela-log').innerHTML = logs.map(l => `
         <tr>
-            <td>${new Date(l.timestamp).toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})}</td>
+            <td>${new Date(l.timestamp).toLocaleString()}</td>
             <td>${l.type.toUpperCase()}</td>
-            <td>${l.categoria}</td>
             <td>${l.itemName}</td>
             <td>${l.quantity}</td>
         </tr>
     `).join('');
 }
 
+async function setupHistoricoItem(nome) {
+    await fetchData();
+    document.getElementById('hist-titulo').innerText = `Histórico: ${nome}`;
+    const filtrados = logs.filter(l => l.itemName.toLowerCase() === nome.toLowerCase());
+    document.getElementById('corpo-hist-item').innerHTML = filtrados.map(l => `
+        <tr>
+            <td>${new Date(l.timestamp).toLocaleDateString()}</td>
+            <td>${l.type.toUpperCase()}</td>
+            <td>${l.quantity}</td>
+        </tr>
+    `).join('');
+}
+
+async function resetBase() {
+    if (!confirm('ATENÇÃO: Isso apagará TODO o estoque e histórico. Continuar?')) return;
+    await fetch('/api/reset', { method: 'DELETE' });
+    showToast('Base reiniciada!');
+    closeModal();
+}
+
 function exportarXLSX() {
     const ws = XLSX.utils.json_to_sheet(logs);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Logs");
-    XLSX.writeFile(wb, "estoque_relatorio.xlsx");
-}
-
-async function setupDashboardView() {
-    await fetchData();
-    showDashboardMenu();
-}
-
-function showDashboardMenu() {
-    if (activeChart) activeChart.destroy();
-    const content = document.getElementById('dashboard-content');
-    content.innerHTML = document.getElementById('sub-template-dashboard-menu').innerHTML;
-}
-
-function showChart(type) {
-    const content = document.getElementById('dashboard-content');
-    content.innerHTML = document.getElementById('sub-template-chart-view').innerHTML;
-    const ctx = document.getElementById('main-chart-canvas').getContext('2d');
-    const ctrl = document.getElementById('chart-controls');
-
-    if (type === 'comparacaoItemTotal') {
-        const itens = [...new Set(logs.map(l => l.itemName))].sort();
-        ctrl.innerHTML = `<select id="sel-item"><option value="">Selecione...</option>${itens.map(n => `<option value="${n}">${n}</option>`).join('')}</select>`;
-        document.getElementById('sel-item').onchange = (e) => {
-            if (activeChart) activeChart.destroy();
-            const total = estoque.reduce((s, i) => s + i.quantidade, 0);
-            const itemQtd = estoque.filter(i => i.identificacao === e.target.value).reduce((s, i) => s + i.quantidade, 0);
-            activeChart = new Chart(ctx, { type: 'bar', data: { labels: ['Total', e.target.value], datasets: [{ data: [total, itemQtd], backgroundColor: ['#2c6e49', '#ffc9B5'] }] }, options: { maintainAspectRatio: false } });
-        };
-    }
+    XLSX.utils.book_append_sheet(wb, ws, "Movimentações");
+    XLSX.writeFile(wb, "Relatorio_Estoque.xlsx");
 }
 
 document.getElementById('dashboard-fab').onclick = () => openModal('template-dashboard', true);
-document.getElementById('modal-overlay').onclick = (e) => { if (e.target.id === 'modal-overlay') closeModal(); };
+async function setupDashboardView() {
+    await fetchData();
+    const ctx = document.getElementById('main-chart-canvas').getContext('2d');
+    const data = estoque.reduce((acc, i) => {
+        acc[i.categoria] = (acc[i.categoria] || 0) + i.quantidade;
+        return acc;
+    }, {});
+    activeChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(data),
+            datasets: [{ data: Object.values(data), backgroundColor: ['#2c6e49', '#4c956c', '#ffc9B5', '#d90429', '#0077b6'] }]
+        }
+    });
+}
