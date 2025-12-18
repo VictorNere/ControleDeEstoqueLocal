@@ -9,14 +9,12 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
         serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     } catch (err) {
-        console.error("Erro ao converter a variável FIREBASE_SERVICE_ACCOUNT para JSON.");
         process.exit(1);
     }
 } else {
     try {
         serviceAccount = require("./serviceAccountKey.json");
     } catch (e) {
-        console.error("Credenciais do Firebase nao encontradas (Variavel ou Arquivo).");
         process.exit(1);
     }
 }
@@ -78,5 +76,5 @@ app.post('/api/log', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
