@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c6e49">
-    <title>Sistema de Estoque Profissional</title>
+    <title>Inventário TI - Prefeitura</title>
     <link rel="icon" type="image/png" href="https://img.icons8.com/plasticine/100/box--v1.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -59,10 +59,7 @@
         <div class="filters-grid">
             <input type="text" id="f-est-nome" placeholder="Nome..." onkeyup="filterEstoque()">
             <input type="text" id="f-est-pat" placeholder="Patrimônio..." onkeyup="filterEstoque()">
-            <select id="f-est-cat" onchange="filterEstoque()">
-                <option value="">Categorias</option>
-                <option value="HDD">HDD</option><option value="Memória RAM NB">Memória RAM NB</option><option value="Memória RAM PC">Memória RAM PC</option><option value="Placa Vídeo / GPU">Placa Vídeo / GPU</option><option value="SSD M2">SSD M2</option><option value="SSD Sata">SSD Sata</option><option value="Processador">Processador</option><option value="Placa Mãe">Placa Mãe</option><option value="Telefonia Móvel">Telefonia Móvel</option><option value="Equipamento Completo">Equipamento Completo</option><option value="Infraestrutura">Infraestrutura</option><option value="Fonte / PSU">Fonte / PSU</option><option value="Periférico">Periférico</option><option value="Telefonia">Telefonia</option><option value="Suprimento">Suprimento</option><option value="Outros">Outros</option>
-            </select>
+            <select id="f-est-cat" onchange="filterEstoque()"><option value="">Categorias</option></select>
         </div>
         <div class="table-responsive">
             <table>
@@ -72,66 +69,63 @@
         </div>
     </template>
 
-    <template id="template-editar">
-        <div class="modal-header"><h2>Editar Registro</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <form id="form-editar-item">
-            <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
-            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
-            <div class="form-group"><label>Patrimônio (N/A se não houver)</label><input type="text" id="edit-patrimonio"></div>
-            <div class="center-btn"><button type="submit" class="submit-btn" id="btn-editar-salvar">Salvar Alterações</button></div>
-        </form>
+    <template id="template-observacao">
+        <div class="modal-header"><h2>Observações: <span id="obs-item-nome"></span></h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div id="lista-observacoes" class="obs-list"></div>
+        <div class="center-btn"><button class="submit-btn" onclick="closeModal()">Voltar</button></div>
     </template>
 
     <template id="template-retirar">
         <div class="modal-header"><h2>Retirada</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <form id="form-retirar-item">
-            <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled></div>
+            <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled class="readonly-input"></div>
             <div class="form-group"><label>Quantidade (Máx: <span id="max-retirar"></span>)</label><input type="number" id="retirar-qtd" min="1" required></div>
-            <div class="form-group"><label>Destino</label><input type="text" id="retirar-destino" required placeholder="Local de destino..."></div>
+            <div class="form-group"><label>Destino</label><input type="text" id="retirar-destino" required placeholder="Para onde vai?"></div>
             <div class="form-group"><label>Data e Hora</label><input type="datetime-local" id="retirar-data" required></div>
             <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-retirada">Confirmar Saída</button></div>
+        </form>
+    </template>
+
+    <template id="template-editar">
+        <div class="modal-header"><h2>Editar Registro</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-editar-item">
+            <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
+            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
+            <div class="form-group"><label>Patrimônio</label><input type="text" id="edit-patrimonio"></div>
+            <div class="center-btn"><button type="submit" class="submit-btn" id="btn-editar-salvar">Salvar Alterações</button></div>
         </form>
     </template>
 
     <template id="template-excluir">
         <div class="modal-header"><h2>Excluir</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <form id="form-excluir-item">
-            <div class="form-group"><label>Item</label><input type="text" id="excluir-nome" disabled></div>
-            <div class="form-group"><label>Qtd. a Excluir (Máx: <span id="max-excluir"></span>)</label><input type="number" id="excluir-qtd" min="1" required></div>
+            <div class="form-group"><label>Item</label><input type="text" id="excluir-nome" disabled class="readonly-input"></div>
+            <div class="form-group"><label>Quantidade (Máx: <span id="max-excluir"></span>)</label><input type="number" id="excluir-qtd" min="1" required></div>
             <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-exclusao">Excluir Agora</button></div>
         </form>
     </template>
 
     <template id="template-relatorio">
-        <div class="modal-header"><h2>Relatório</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Relatório Geral</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <div class="filters-grid-rel">
             <input type="text" id="f-rel-nome" placeholder="Item..." onkeyup="filterRelatorio()">
             <select id="f-rel-cat" onchange="filterRelatorio()"><option value="">Categorias</option></select>
             <select id="f-rel-acao" onchange="filterRelatorio()">
-                <option value="">Ações</option>
-                <option value="adicao">Adicionado</option>
-                <option value="retirada">Retirado</option>
-                <option value="exclusao">Excluído</option>
+                <option value="">Ações</option><option value="adicao">Adicionado</option><option value="retirada">Retirado</option><option value="exclusao">Excluído</option>
             </select>
             <input type="date" id="f-rel-data-i" onchange="filterRelatorio()">
             <input type="date" id="f-rel-data-f" onchange="filterRelatorio()">
         </div>
         <div class="report-actions centralize">
-            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> Exportar</button>
-            <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash"></i> Limpar Tudo</button>
+            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> Exportar XLSX</button>
+            <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash-can"></i> Limpar Base</button>
         </div>
         <div class="table-responsive">
             <table>
-                <thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Item</th><th>Destino</th><th>Qtd.</th></tr></thead>
+                <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Categoria</th><th>Item</th><th>Destino</th><th>Qtd.</th></tr></thead>
                 <tbody id="corpo-tabela-log"></tbody>
             </table>
         </div>
-    </template>
-
-    <template id="template-observacao">
-        <div class="modal-header"><h2>Observações: <span id="obs-item-nome"></span></h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div id="lista-observacoes" class="obs-list"></div>
-        <div class="center-btn"><button class="submit-btn" onclick="closeModal()">Voltar</button></div>
     </template>
 
     <template id="template-historico-item">
