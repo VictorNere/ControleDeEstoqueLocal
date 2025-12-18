@@ -31,7 +31,9 @@
         </div>
     </div>
     <div id="toast-container"></div>
-    <div class="modal-overlay" id="modal-overlay"><div class="modal-content" id="modal-content-host"></div></div>
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content" id="modal-content-host"></div>
+    </div>
 
     <template id="template-adicionar">
         <div class="modal-header"><h2>Adicionar Novo Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
@@ -43,38 +45,20 @@
             <div class="form-group patrimonio-group"><label>Possui Patrimônio?</label><div class="radio-options"><input type="radio" id="patrimonio-nao" name="possui-patrimonio" value="nao" checked><label for="patrimonio-nao">Não</label><input type="radio" id="patrimonio-sim" name="possui-patrimonio" value="sim"><label for="patrimonio-sim">Sim</label></div></div>
             <div id="patrimonio-input-container" class="form-group" style="display:none;"><label for="patrimonio-numero">Número do Patrimônio</label><input type="text" id="patrimonio-numero"></div>
             <div class="form-group"><label for="observacao">Observação</label><textarea id="observacao"></textarea></div>
-            <button type="submit" class="submit-btn">Salvar</button>
+            <div class="form-actions"><button type="submit" id="btn-salvar-fechar" class="submit-btn">Salvar e Fechar</button><button type="button" id="btn-salvar-outro" class="secondary-btn">Salvar e Adicionar Outro</button></div>
         </form>
     </template>
-    
+
     <template id="template-estoque">
         <div class="modal-header"><h2>Estoque Atual</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div class="filtros-container"><div class="filtro-item"><input type="text" id="filtro-texto" placeholder="Buscar..."></div></div>
-        <table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Item</th><th>Qtd.</th><th>Patrimônio</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-estoque"></tbody></table>
+        <div class="filtros-container"><div class="filtro-item"><input type="text" id="filtro-texto" placeholder="Buscar por identificação ou categoria..."></div></div>
+        <table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Identificação</th><th>Qtd.</th><th>Patrimônio</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-estoque"></tbody></table>
     </template>
 
     <template id="template-relatorio">
-        <div class="modal-header"><h2>Relatórios</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header report-header"><h2>Relatório de Movimentação</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <div class="report-summary"><div class="summary-card"><h3>Itens Totais</h3><p id="total-items-summary">0</p></div><div class="summary-card"><h3>Movimentos</h3><p id="total-moves-summary">0</p></div></div>
         <table id="log-table"><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd.</th><th>Obs.</th></tr></thead><tbody id="corpo-tabela-log"></tbody></table>
-    </template>
-
-    <template id="template-editar">
-        <div class="modal-header"><h2>Editar Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <form id="form-editar-item">
-            <input type="hidden" id="editar-id">
-            <div class="form-group"><label>Identificação</label><input type="text" id="identificacao-editar" required></div>
-            <button type="submit" class="submit-btn">Atualizar</button>
-        </form>
-    </template>
-
-    <template id="template-retirar">
-        <div class="modal-header"><h2>Retirar Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <form id="form-retirar-item">
-            <input type="hidden" id="retirar-id">
-            <div class="form-group"><label>Quantidade a Retirar</label><input type="number" id="quantidade-retirar" min="1" required></div>
-            <button type="submit" class="submit-btn">Confirmar</button>
-        </form>
     </template>
 
     <script type="module" src="script.js"></script>
