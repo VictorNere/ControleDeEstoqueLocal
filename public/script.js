@@ -27,6 +27,7 @@ async function fetchData(force = false) {
         const [eRes, lRes] = await Promise.all([fetch('/api/estoque'), fetch('/api/log')]);
         estoque = await eRes.json();
         logs = await lRes.json();
+        // ORDENAÇÃO CRONOLÓGICA RÍGIDA: Mais recente primeiro
         logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (err) {
         showToast('Erro de conexão', 'error');
@@ -68,6 +69,7 @@ function closeModal() {
 
 function setupFormAdicionar() {
     const form = document.getElementById('form-adicionar-item');
+    const btn = document.getElementById('btn-salvar');
     const checkPat = document.getElementById('check-patrimonio');
     checkPat.onchange = () => {
         const container = document.getElementById('pat-input-container');
@@ -77,7 +79,6 @@ function setupFormAdicionar() {
     };
     form.onsubmit = async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('btn-salvar');
         btn.disabled = true;
         
         const timestamp = new Date().toISOString();
@@ -204,15 +205,13 @@ function setupFormRetirar(id) {
     document.getElementById('retirar-nome').value = item.identificacao;
     document.getElementById('max-retirar').innerText = item.quantidade;
     document.getElementById('retirar-qtd').max = item.quantidade;
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('retirar-data').value = now.toISOString().slice(0, 16);
+    
     form.onsubmit = async (e) => {
         e.preventDefault();
         const qtd = parseInt(document.getElementById('retirar-qtd').value);
         const destino = document.getElementById('retirar-destino').value.trim();
-        const dtInput = document.getElementById('retirar-data').value;
-        const timestamp = new Date(dtInput).toISOString();
+        const timestamp = new Date().toISOString(); // HORÁRIO AUTOMÁTICO
+        
         if (qtd > item.quantidade || qtd <= 0) return showToast('Qtd inválida', 'error');
         if (item.quantidade === qtd) await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
         else await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: item.quantidade - qtd }) });
@@ -232,14 +231,18 @@ function setupFormEditar(id) {
     document.getElementById('edit-patrimonio').value = item.patrimonio;
     form.onsubmit = async (e) => {
         e.preventDefault();
+        const timestamp = new Date().toISOString(); // HORÁRIO AUTOMÁTICO
         const novaIdentificacao = document.getElementById('edit-identificacao').value.trim();
         const novaCategoria = form.categoria.value;
         const novoPatrimonio = document.getElementById('edit-patrimonio').value.trim() || 'N/A';
+        
+        // LÓGICA DE UNIFICAÇÃO
         if (novoPatrimonio === 'N/A') {
             const alvo = estoque.find(i => i.id !== id && i.identificacao.toLowerCase() === novaIdentificacao.toLowerCase() && i.categoria === novaCategoria && i.patrimonio === 'N/A');
             if (alvo) {
                 await fetch(`/api/estoque/${alvo.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ quantidade: alvo.quantidade + item.quantidade }) });
                 await fetch(`/api/estoque/${id}`, { method: 'DELETE' });
+                await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp, type: 'edicao', categoria: novaCategoria, itemName: novaIdentificacao, quantity: 0, destino: 'Unificado' }) });
                 showToast('Item unificado!');
                 await fetchData(true);
                 closeModal();
@@ -247,6 +250,7 @@ function setupFormEditar(id) {
             }
         }
         await fetch(`/api/estoque/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ categoria: novaCategoria, identificacao: novaIdentificacao, patrimonio: novoPatrimonio }) });
+        await fetch('/api/log', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ timestamp, type: 'edicao', categoria: novaCategoria, itemName: novaIdentificacao, quantity: 0, destino: 'Estoque' }) });
         showToast('Atualizado!');
         await fetchData(true);
         closeModal();
@@ -261,7 +265,7 @@ async function setupHistoricoItem(nome) {
 }
 
 async function resetBase() {
-    if (!confirm('Deseja apagar TUDO?')) return;
+    if (!confirm('Apagar TUDO?')) return;
     await fetch('/api/reset', { method: 'DELETE' });
     showToast('Base limpa!');
     estoque = []; logs = [];
@@ -271,7 +275,7 @@ async function resetBase() {
 function exportarXLSX() {
     const data = logs.map(l => ({ 
         "Data/Hora": new Date(l.timestamp).toLocaleString('pt-BR'), 
-        "Tipo": l.type === 'adicao' ? 'Adição' : l.type === 'retirada' ? 'Retirada' : 'Exclusão', 
+        "Tipo": l.type === 'adicao' ? 'Adição' : l.type === 'retirada' ? 'Retirada' : l.type === 'exclusao' ? 'Exclusão' : 'Edição', 
         "Categoria": l.categoria, 
         "Nome": l.itemName, 
         "Quantidade": l.quantity, 
@@ -280,7 +284,7 @@ function exportarXLSX() {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-    XLSX.writeFile(wb, "Estoque_Prefeitura_Relatorio.xlsx");
+    XLSX.writeFile(wb, "Relatorio_Estoque_Prefeitura.xlsx");
 }
 
 document.getElementById('dashboard-fab').onclick = () => openModal('template-dashboard', true);

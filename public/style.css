@@ -13,6 +13,7 @@ h1 { font-size: 3em; color: var(--primary-color); margin-bottom: 40px; font-weig
 .modal-content { background: var(--card-bg); padding: 35px; border-radius: 15px; width: 95%; max-width: 850px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
 .modal-content.modal-lg { max-width: 1150px; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
+.modal-header h2 { margin: 0; color: var(--primary-dark); }
 .close-button { font-size: 2.5em; border: none; background: none; cursor: pointer; color: #ccc; transition: 0.2s; line-height: 1; }
 .close-button:hover { color: var(--danger-color); }
 .form-group { margin-bottom: 20px; text-align: left; }
@@ -20,6 +21,7 @@ h1 { font-size: 3em; color: var(--primary-color); margin-bottom: 40px; font-weig
 input, select, textarea { width: 100%; padding: 12px; border: 1.5px solid var(--border-color); border-radius: 10px; font-family: inherit; font-size: 1em; background-color: #f0f2f5; transition: 0.3s ease; }
 input:focus, select:focus, textarea:focus { background-color: #ffffff; border-color: var(--primary-color); outline: none; box-shadow: 0 0 0 4px rgba(44, 110, 73, 0.1); }
 .readonly-field { background-color: #e9ecef !important; cursor: not-allowed; opacity: 0.7; }
+.auto-time-info { font-size: 0.9em; color: var(--light-text-color); text-align: center; margin-top: 10px; font-style: italic; }
 .checkbox-container { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
 .styled-checkbox { display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 600; }
 .styled-checkbox input { width: 22px; height: 22px; cursor: pointer; }

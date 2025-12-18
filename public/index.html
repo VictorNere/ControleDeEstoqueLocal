@@ -48,7 +48,7 @@
             <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" required placeholder="Nome do item..."></div>
             <div class="form-group"><label>Quantidade</label><input type="number" name="quantidade" value="1" min="1" required id="input-qtd"></div>
             <div class="form-group checkbox-container"><label class="styled-checkbox"><input type="checkbox" id="check-patrimonio"> <span>Há Patrimônio?</span></label></div>
-            <div id="pat-input-container" class="form-group" style="display:none;"><label>Número do Patrimônio</label><input type="text" id="patrimonio-numero" placeholder="Digite o patrimônio..."></div>
+            <div id="pat-input-container" class="form-group" style="display:none;"><label>Número do Patrimônio</label><input type="text" id="patrimonio-numero" placeholder="Número do patrimônio..."></div>
             <div class="form-group"><label>Observação</label><textarea name="observacao" placeholder="Notas sobre este item..."></textarea></div>
             <div class="center-btn"><button type="submit" class="submit-btn" id="btn-salvar">Salvar Item</button></div>
         </form>
@@ -59,7 +59,7 @@
         <div class="filters-grid">
             <input type="text" id="f-est-nome" placeholder="Nome..." onkeyup="filterEstoque()">
             <input type="text" id="f-est-pat" placeholder="Patrimônio..." onkeyup="filterEstoque()">
-            <select id="f-est-cat" onchange="filterEstoque()"><option value="">Todas Categorias</option></select>
+            <select id="f-est-cat" onchange="filterEstoque()"><option value="">Categorias</option></select>
         </div>
         <div class="table-responsive">
             <table>
@@ -70,7 +70,7 @@
     </template>
 
     <template id="template-observacao">
-        <div class="modal-header"><h2>Histórico de Observações: <span id="obs-item-nome"></span></h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Observações: <span id="obs-item-nome"></span></h2><button class="close-button" onclick="closeModal()">×</button></div>
         <div id="lista-observacoes" class="obs-list"></div>
         <div class="center-btn"><button class="submit-btn" onclick="closeModal()">Voltar</button></div>
     </template>
@@ -80,8 +80,8 @@
         <form id="form-retirar-item">
             <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled class="readonly-field"></div>
             <div class="form-group"><label>Quantidade (Máx: <span id="max-retirar"></span>)</label><input type="number" id="retirar-qtd" min="1" required></div>
-            <div class="form-group"><label>Destino</label><input type="text" id="retirar-destino" required placeholder="Local de destino..."></div>
-            <div class="form-group"><label>Data e Hora</label><input type="datetime-local" id="retirar-data" required></div>
+            <div class="form-group"><label>Destino</label><input type="text" id="retirar-destino" required placeholder="Para onde vai?"></div>
+            <p class="auto-time-info"><i class="fa-solid fa-clock"></i> O horário será registrado automaticamente.</p>
             <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-retirada">Confirmar Saída</button></div>
         </form>
     </template>
@@ -111,13 +111,13 @@
             <input type="text" id="f-rel-nome" placeholder="Item..." onkeyup="filterRelatorio()">
             <select id="f-rel-cat" onchange="filterRelatorio()"><option value="">Categorias</option></select>
             <select id="f-rel-acao" onchange="filterRelatorio()">
-                <option value="">Ações</option><option value="adicao">Adicionado</option><option value="retirada">Retirado</option><option value="exclusao">Excluído</option>
+                <option value="">Ações</option><option value="adicao">Adicionado</option><option value="retirada">Retirado</option><option value="exclusao">Excluído</option><option value="edicao">Editado</option>
             </select>
             <input type="date" id="f-rel-data-i" onchange="filterRelatorio()">
             <input type="date" id="f-rel-data-f" onchange="filterRelatorio()">
         </div>
         <div class="report-actions centralize">
-            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> XLSX</button>
+            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> Exportar XLSX</button>
             <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash"></i> Limpar Tudo</button>
         </div>
         <div class="table-responsive">
