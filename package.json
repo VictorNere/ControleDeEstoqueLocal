@@ -1,0 +1,13 @@
+{
+  "name": "controle-estoque-pwa",
+  "version": "1.0.0",
+  "description": "Sistema de estoque com Firebase, Gemini e PWA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "path": "^0.12.7"
+  }
+}

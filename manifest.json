@@ -1,0 +1,26 @@
+{
+  "name": "Sistema de Estoque Moderno",
+  "short_name": "Estoque",
+  "description": "Controle de estoque com Firebase e IA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fefee3",
+  "theme_color": "#2c6e49",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/plasticine/100/box--v1.png",
+      "sizes": "100x100",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/plasticine/192/box--v1.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/plasticine/512/box--v1.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
