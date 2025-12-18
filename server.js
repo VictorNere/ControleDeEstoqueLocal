@@ -40,8 +40,7 @@ app.get('/api/estoque', async (req, res) => {
 
 app.post('/api/estoque', async (req, res) => {
     try {
-        const item = req.body;
-        const resDoc = await db.collection('estoque').add(item);
+        const resDoc = await db.collection('estoque').add(req.body);
         res.json({ id: resDoc.id });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -101,5 +100,5 @@ app.delete('/api/reset', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Server: ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

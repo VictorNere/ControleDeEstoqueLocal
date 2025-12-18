@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c6e49">
-    <title>Estoque Pro</title>
+    <title>Inventário TI PWA</title>
     <link rel="icon" type="image/png" href="https://img.icons8.com/plasticine/100/box--v1.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
     </div>
 
     <div id="toast-container"></div>
-    <button id="dashboard-fab"><i class="fa-solid fa-chart-simple"></i></button>
+    <button id="dashboard-fab"><i class="fa-solid fa-chart-pie"></i></button>
     <div class="modal-overlay" id="modal-overlay"><div class="modal-content" id="modal-content-host"></div></div>
 
     <template id="template-adicionar">
@@ -55,29 +55,24 @@
                     <option value="Outros">Outros</option>
                 </select>
             </div>
-            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" required></div>
+            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" required placeholder="Digite o nome do item..."></div>
             <div class="form-group"><label>Quantidade</label><input type="number" name="quantidade" value="1" min="1" required id="input-qtd"></div>
             <div class="form-group checkbox-container"><label class="styled-checkbox"><input type="checkbox" id="check-patrimonio"> <span>Há Patrimônio?</span></label></div>
-            <div id="pat-input-container" class="form-group" style="display:none;"><label>Número do Patrimônio</label><input type="text" id="patrimonio-numero"></div>
-            <div class="form-group"><label>Observação</label><textarea name="observacao"></textarea></div>
+            <div id="pat-input-container" class="form-group" style="display:none;"><label>Número do Patrimônio</label><input type="text" id="patrimonio-numero" placeholder="Digite o número do patrimônio..."></div>
+            <div class="form-group"><label>Observação</label><textarea name="observacao" placeholder="Alguma observação importante?"></textarea></div>
             <div class="center-btn"><button type="submit" class="submit-btn" id="btn-salvar">Salvar Item</button></div>
-        </form>
-    </template>
-
-    <template id="template-retirar">
-        <div class="modal-header"><h2>Retirada de Material</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <form id="form-retirar-item">
-            <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled></div>
-            <div class="form-group"><label>Quantidade a Retirar (Máx: <span id="max-retirar"></span>)</label><input type="number" id="retirar-qtd" min="1" required></div>
-            <div class="form-group"><label>Destino / Para onde?</label><input type="text" id="retirar-destino" required placeholder="Ex: Secretaria de Saúde"></div>
-            <div class="form-group"><label>Data e Hora da Retirada</label><input type="datetime-local" id="retirar-data" required></div>
-            <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-retirada">Confirmar Saída</button></div>
         </form>
     </template>
 
     <template id="template-estoque">
         <div class="modal-header"><h2>Estoque</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div class="filtros-container"><input type="text" id="filtro-texto" placeholder="Pesquisar..."></div>
+        <div class="filters-grid">
+            <input type="text" id="f-est-nome" placeholder="Nome ou Patrimônio..." onkeyup="filterEstoque()">
+            <select id="f-est-cat" onchange="filterEstoque()">
+                <option value="">Todas Categorias</option>
+                <option value="HDD">HDD</option><option value="Memória RAM NB">Memória RAM NB</option><option value="Memória RAM PC">Memória RAM PC</option><option value="Placa Vídeo / GPU">Placa Vídeo / GPU</option><option value="SSD M2">SSD M2</option><option value="SSD Sata">SSD Sata</option><option value="Processador">Processador</option><option value="Placa Mãe">Placa Mãe</option><option value="Telefonia Móvel">Telefonia Móvel</option><option value="Equipamento Completo">Equipamento Completo</option><option value="Infraestrutura">Infraestrutura</option><option value="Fonte / PSU">Fonte / PSU</option><option value="Periférico">Periférico</option><option value="Telefonia">Telefonia</option><option value="Suprimento">Suprimento</option><option value="Outros">Outros</option>
+            </select>
+        </div>
         <div class="table-responsive">
             <table>
                 <thead><tr><th>Categoria</th><th>Identificação</th><th>Qtd.</th><th>Patr.</th><th>Ações</th></tr></thead>
@@ -86,17 +81,19 @@
         </div>
     </template>
 
-    <template id="template-editar">
-        <div class="modal-header"><h2>Editar</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <form id="form-editar-item">
-            <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
-            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
-            <div class="center-btn"><button type="submit" class="submit-btn" id="btn-editar-salvar">Atualizar</button></div>
-        </form>
-    </template>
-
     <template id="template-relatorio">
-        <div class="modal-header"><h2>Relatório de Movimentação</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Relatório</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="filters-grid-rel">
+            <input type="text" id="f-rel-nome" placeholder="Item..." onkeyup="filterRelatorio()">
+            <select id="f-rel-cat" onchange="filterRelatorio()"><option value="">Categorias</option></select>
+            <select id="f-rel-acao" onchange="filterRelatorio()">
+                <option value="">Ações</option>
+                <option value="adicao">Adicionado</option>
+                <option value="retirada">Retirado</option>
+            </select>
+            <input type="date" id="f-rel-data-i" onchange="filterRelatorio()">
+            <input type="date" id="f-rel-data-f" onchange="filterRelatorio()">
+        </div>
         <div class="report-actions centralize">
             <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> Exportar</button>
             <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash"></i> Limpar Tudo</button>
@@ -109,9 +106,31 @@
         </div>
     </template>
 
+    <template id="template-editar">
+        <div class="modal-header"><h2>Editar Item</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-editar-item">
+            <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
+            <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
+            <div class="center-btn"><button type="submit" class="submit-btn" id="btn-editar-salvar">Atualizar</button></div>
+        </form>
+    </template>
+
+    <template id="template-retirar">
+        <div class="modal-header"><h2>Retirada</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <form id="form-retirar-item">
+            <div class="form-group"><label>Item</label><input type="text" id="retirar-nome" disabled></div>
+            <div class="form-group"><label>Quantidade (Máx: <span id="max-retirar"></span>)</label><input type="number" id="retirar-qtd" min="1" required></div>
+            <div class="form-group"><label>Destino</label><input type="text" id="retirar-destino" required placeholder="Para onde vai?"></div>
+            <div class="form-group"><label>Data e Hora</label><input type="datetime-local" id="retirar-data" required></div>
+            <div class="center-btn"><button type="submit" class="submit-btn danger" id="btn-confirmar-retirada">Confirmar Saída</button></div>
+        </form>
+    </template>
+
     <template id="template-historico-item">
         <div class="modal-header"><h2 id="hist-titulo">Histórico</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <table><thead><tr><th>Data</th><th>Tipo</th><th>Destino</th><th>Qtd.</th></tr></thead><tbody id="corpo-hist-item"></tbody></table>
+        <div class="table-responsive">
+            <table><thead><tr><th>Data</th><th>Tipo</th><th>Destino</th><th>Qtd.</th></tr></thead><tbody id="corpo-hist-item"></tbody></table>
+        </div>
     </template>
 
     <template id="template-dashboard">
