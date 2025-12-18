@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c6e49">
-    <title>Estoque PWA</title>
+    <title>Inventário Pro PWA</title>
     <link rel="icon" type="image/png" href="https://img.icons8.com/plasticine/100/box--v1.png">
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@
             <div class="form-group"><label>Categoria</label><select name="categoria" required><option value="HDD">HDD</option><option value="Memória RAM NB">Memória RAM NB</option><option value="Memória RAM PC">Memória RAM PC</option><option value="Placa Vídeo / GPU">Placa Vídeo / GPU</option><option value="SSD M2">SSD M2</option><option value="SSD Sata">SSD Sata</option><option value="Processador">Processador</option><option value="Placa Mãe">Placa Mãe</option><option value="Outros">Outros</option></select></div>
             <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" required></div>
             <div class="form-group"><label>Quantidade</label><input type="number" name="quantidade" value="1" min="1" required id="input-qtd"></div>
-            <div class="form-group checkbox-group"><label class="switch-label"><input type="checkbox" id="check-patrimonio"> Há Patrimônio?</label></div>
+            <div class="form-group checkbox-group"><label class="custom-checkbox"><input type="checkbox" id="check-patrimonio"> <span>Há Patrimônio?</span></label></div>
             <div id="pat-input-container" class="form-group" style="display:none;"><label>Número do Patrimônio</label><input type="text" id="patrimonio-numero"></div>
             <div class="form-group"><label>Observação</label><textarea name="observacao"></textarea></div>
             <button type="submit" class="submit-btn" id="btn-salvar">Salvar Item</button>
@@ -48,23 +48,23 @@
         <form id="form-editar-item">
             <div class="form-group"><label>Categoria</label><select name="categoria" id="edit-categoria"></select></div>
             <div class="form-group"><label>Identificação</label><input type="text" name="identificacao" id="edit-identificacao" required></div>
-            <button type="submit" class="submit-btn" id="btn-editar-salvar">Atualizar</button>
+            <button type="submit" class="submit-btn" id="btn-editar-salvar">Atualizar Dados</button>
         </form>
     </template>
 
     <template id="template-estoque">
-        <div class="modal-header"><h2>Estoque</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div class="filtros-container"><input type="text" id="filtro-texto" placeholder="Buscar item ou patrimônio..."></div>
-        <table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Identificação</th><th>Qtd.</th><th>Patr.</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-estoque"></tbody></table>
+        <div class="modal-header"><h2>Estoque Atual</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="filtros-container"><input type="text" id="filtro-texto" placeholder="Buscar por nome ou patrimônio..."></div>
+        <div class="table-responsive"><table class="tabela-estoque"><thead><tr><th>Categoria</th><th>Identificação</th><th>Qtd.</th><th>Patr.</th><th>Ações</th></tr></thead><tbody id="corpo-tabela-estoque"></tbody></table></div>
     </template>
 
     <template id="template-relatorio">
-        <div class="modal-header report-header"><h2>Relatório</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="modal-header"><h2>Relatório Geral</h2><button class="close-button" onclick="closeModal()">×</button></div>
         <div class="report-actions">
-            <button class="action-btn" onclick="exportarXLSX()">Exportar XLSX</button>
-            <button class="action-btn danger" onclick="resetBase()">Remover Base de Dados</button>
+            <button class="action-btn" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> XLSX</button>
+            <button class="action-btn danger" onclick="resetBase()"><i class="fa-solid fa-trash-can"></i> Remover Base de Dados</button>
         </div>
-        <table id="log-table"><thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd.</th></tr></thead><tbody id="corpo-tabela-log"></tbody></table>
+        <div class="table-responsive"><table id="log-table"><thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Item</th><th>Qtd.</th></tr></thead><tbody id="corpo-tabela-log"></tbody></table></div>
     </template>
 
     <template id="template-historico-item">
@@ -73,8 +73,8 @@
     </template>
 
     <template id="template-dashboard">
-        <div class="modal-header"><h2>Dashboard</h2><button class="close-button" onclick="closeModal()">×</button></div>
-        <div id="dashboard-content"><canvas id="main-chart-canvas"></canvas></div>
+        <div class="modal-header"><h2>Análise de Dados</h2><button class="close-button" onclick="closeModal()">×</button></div>
+        <div class="chart-container"><canvas id="main-chart-canvas"></canvas></div>
     </template>
 
     <script src="script.js"></script>
